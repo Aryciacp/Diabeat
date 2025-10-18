@@ -14,8 +14,8 @@ export const styles = {
     },
     formGroup: {
         width: "100%",
-        marginTop: 40,
-        marginBottom: 220
+        marginTop: 10,
+        marginBottom: 290
     },
     footer: {
         width: "80%",
@@ -27,5 +27,14 @@ export const styles = {
         textAlign: "center",
         color: COLORS.dark_gray,
         fontSize: FONT_SIZE.md
+    },
+    forgotPasswordContainer: {
+        alignItems: "center",
+        marginTop: 10
+    },
+    forgotPasswordText: {
+        color: "#FFFFFF",
+        fontSize: FONT_SIZE.md,
+    
     }
 }

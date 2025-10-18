@@ -61,7 +61,7 @@ function Registro() {
 
     return <ScrollView>
         <View style={styles.container}>
-            <Header texto="Criar sua conta." />
+            <Header texto="Cadastro" />
 
             <View style={styles.formGroup}>
                 <View style={styles.form}>

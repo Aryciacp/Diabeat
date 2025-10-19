@@ -38,7 +38,7 @@ function Login({ navigation }) {
 
     return (
         <View style={styles.container}>
-            <Header texto="Acesse sua conta." />
+            <Header texto="Faça Login" />
 
             <View style={styles.formGroup}>
                 <View style={styles.form}>

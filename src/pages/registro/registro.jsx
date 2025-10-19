@@ -92,18 +92,12 @@ function Registro() {
                              onChangeText={setConfirmaSenha} />
                 </View>
 
-                <View style={styles.form}>
+                <View style={styles.buttonContainer}>
                     {/* --- 5. Conecte o botão à sua função de envio --- */}
-                    <Button texto="Próximo passo" 
+                    <Button texto="Cadastrar" 
                         
                             onPress={handleRegistro} />
                 </View>
-            </View>
-
-            <View style={styles.footer}>
-                <TouchableOpacity>
-                    <Text style={styles.footerText}>Acessar minha conta.</Text>
-                </TouchableOpacity>
             </View>
         </View>
     </ScrollView>

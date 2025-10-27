@@ -4,7 +4,7 @@ export const styles = {
     container: {
         flex: 1,
         backgroundColor: "#fff",
-        alignItems: "center",
+        // Removemos o alignItems: "center" daqui
     },
     header: {
         backgroundColor: "#46A376",
@@ -42,10 +42,20 @@ export const styles = {
     editIcon: {
         marginLeft: 5,
     },
+
+    // --- ESTILOS DE SCROLL CORRIGIDOS ---
+    scrollContainer: {
+        flex: 1, // Faz a área de rolagem ocupar o resto da tela
+        width: '100%',
+    },
     infoContainer: {
         width: "90%",
-        marginTop: 20,
+        alignSelf: 'center', // Centraliza o conteúdo
+        paddingTop: 20,
+        paddingBottom: 40, // Espaço no fim para o scroll
     },
+    // --- FIM DA CORREÇÃO ---
+
     input: {
         width: "100%",
         backgroundColor: "#fff",

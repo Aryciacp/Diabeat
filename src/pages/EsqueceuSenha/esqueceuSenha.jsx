@@ -1,10 +1,12 @@
-import { View, Text, TouchableOpacity, Alert } from "react-native";
-import { styles } from "./esqueceuSenha.style"; 
+// EM: RecuperarSenha.jsx
+import { View, Text, TouchableOpacity, Alert, StyleSheet } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context"; // 1. Importa o SafeAreaView correto
+import { styles } from "./esqueceuSenha.style.js"; 
 import Header from "../../components/header/header.jsx";
 import TextBox from "../../components/textbox/textbox.jsx";
 import Button from "../../components/button/button.jsx";
 import { useState } from "react";
-import api from "../../services/api.ts";
+import api from "../../services/api"; // 2. Remove a extensão ".ts"
 
 function RecuperarSenha({ navigation }) {
     const [email, setEmail] = useState("");
@@ -35,8 +37,9 @@ function RecuperarSenha({ navigation }) {
         }
     };
 
+    // 3. A ESTRUTURA DO JSX FOI CORRIGIDA
     return (
-        <View style={styles.container}>
+        <SafeAreaView style={styles.container}>
             <Header texto="Recuperar Senha" />
 
             <View style={styles.formGroup}>
@@ -55,9 +58,15 @@ function RecuperarSenha({ navigation }) {
                         onPress={handleRecover} 
                     />
                 </View>
-
             </View>
-        </View>
+
+            {/* 4. ADICIONADO UM LINK DE "VOLTAR" */}
+            <View style={styles.footer}>
+                <TouchableOpacity onPress={() => navigation.goBack()}>
+                    <Text style={styles.footerText}>Voltar para o Login</Text>
+                </TouchableOpacity>
+            </View>
+        </SafeAreaView>
     );
 }
 

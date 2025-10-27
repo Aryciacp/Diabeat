@@ -1,4 +1,3 @@
-// EM: registro.style.js
 import { COLORS, FONT_SIZE } from "../../constants/theme";
 
 export const styles = {
@@ -22,7 +21,7 @@ export const styles = {
         marginBottom: 20,
     },
     
-    // 4. O container do botão (igual ao 'form' para manter o alinhamento)
+    // 4. O container do botão
     buttonContainer: {
         width: "100%",
         marginTop: 20, // Um espaço extra antes do botão

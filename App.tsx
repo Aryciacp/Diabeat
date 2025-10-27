@@ -5,6 +5,7 @@ import Registro from './src/pages/registro/registro.jsx';
 import RecuperarSenha from './src/pages/EsqueceuSenha/esqueceuSenha.jsx';
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { NavigationContainer } from '@react-navigation/native';
+import ResetPassword from './src/pages/ResetPassword/ResetPassword.jsx';
 
 const Stack = createNativeStackNavigator();
 
@@ -25,6 +26,8 @@ export default function App() {
         <Stack.Screen name='Login' component={Login}/>
         <Stack.Screen name='Registro' component={Registro}/>
         <Stack.Screen name='RecuperarSenha' component={RecuperarSenha}/>
+        <Stack.Screen name="ResetPassword" component={ResetPassword} options={{ headerShown: false }} 
+/>
       </Stack.Navigator>
     </NavigationContainer>
   );

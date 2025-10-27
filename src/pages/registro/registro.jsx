@@ -1,71 +1,59 @@
-import { View, Text, TouchableOpacity, ScrollView, Alert } from "react-native";
-import { styles } from "./registro.style.js";
+// EM: registro.jsx
+import { View, Text, TouchableOpacity, Alert, StyleSheet } from "react-native"; // 1. Removemos o SafeAreaView daqui
+import { SafeAreaView } from "react-native-safe-area-context";
+import { styles } from "./registro.style";
 import Header from "../../components/header/header.jsx";
 import TextBox from "../../components/textbox/textbox.jsx";
 import Button from "../../components/button/button.jsx";
-// --- 1. Importe o useState e o seu serviço de API ---
 import { useState } from "react";
-import api from "../../services/api.ts"; // Importa a configuração do axios
+import api from "../../services/api"; // 2. Corrigi a importação do API
 
-function Registro() {
-    // --- 2. Crie os estados para guardar os dados do formulário ---
+function Registro({ navigation }) { // Adicionei "navigation" para o footer funcionar
     const [nome, setNome] = useState("");
     const [email, setEmail] = useState("");
     const [senha, setSenha] = useState("");
     const [confirmaSenha, setConfirmaSenha] = useState("");
 
-    // --- 3. Crie a função que será chamada ao clicar no botão ---
     const handleRegistro = async () => {
-    // LUZ DE TESTE 1: A função foi chamada?
-    console.log("--- BOTÃO CLICADO! A função handleRegistro foi iniciada. ---");
-
-    if (senha !== confirmaSenha) {
-        Alert.alert("Erro no Cadastro", "As senhas não coincidem.");
-        return;
-    }
-
-    // LUZ DE TESTE 2: Quais dados estamos tentando enviar?
-    console.log("Enviando para o backend os seguintes dados:", {
-        name: nome,
-        email: email,
-        password: "[SENHA OCULTA NO LOG]" // Não vamos logar a senha por segurança
-    });
-
-    try {
-        console.log("Tentando fazer a chamada api.post...");
-
-        const response = await api.post('/users', {
+        // ... (Sua função de registro, que está perfeita, continua aqui) ...
+        console.log("--- BOTÃO CLICADO! A função handleRegistro foi iniciada. ---");
+        if (senha !== confirmaSenha) {
+            Alert.alert("Erro no Cadastro", "As senhas não coincidem.");
+            return;
+        }
+        console.log("Enviando para o backend os seguintes dados:", {
             name: nome,
             email: email,
-            password: senha
+            password: "[SENHA OCULTA NO LOG]"
         });
-
-        console.log("Backend respondeu com sucesso!", response.data);
-        Alert.alert("Sucesso!", "Usuário cadastrado com sucesso.");
-
-    } catch (error) {
-        // LUZ DE TESTE 3: Se der um erro, qual foi?
-        console.error("ERRO na chamada da API:", error);
-        
-        // Vamos verificar se o erro tem uma resposta do servidor
-        if (error.response) {
-            console.error("Dados do erro do servidor:", error.response.data);
+        try {
+            console.log("Tentando fazer a chamada api.post...");
+            const response = await api.post('/users', {
+                name: nome,
+                email: email,
+                password: senha
+            });
+            console.log("Backend respondeu com sucesso!", response.data);
+            Alert.alert("Sucesso!", "Usuário cadastrado com sucesso.");
+            navigation.navigate('Login'); // Opcional: envia pro login após sucesso
+        } catch (error) {
+            console.error("ERRO na chamada da API:", error);
+            if (error.response) {
+                console.error("Dados do erro do servidor:", error.response.data);
+            }
+            Alert.alert("Erro no Cadastro", "Não foi possível criar o usuário. Verifique o console para mais detalhes.");
+        } finally {
+            console.log("--- Fim da tentativa de registro. ---");
         }
-        
-        Alert.alert("Erro no Cadastro", "Não foi possível criar o usuário. Verifique o console para mais detalhes.");
-    } finally {
-        // LUZ DE TESTE 4: Este bloco sempre executa, confirmando que tentamos
-        console.log("--- Fim da tentativa de registro. ---");
-    }
-};
+    };
 
-    return <ScrollView>
-        <View style={styles.container}>
+    // 3. A ESTRUTURA JSX FOI MUDADA PARA SER IGUAL À DO LOGIN
+    return (
+        <SafeAreaView style={styles.container}>
             <Header texto="Cadastro" />
 
             <View style={styles.formGroup}>
                 <View style={styles.form}>
-                    {/* --- 4. Conecte os TextBoxes aos seus estados --- */}
                     <TextBox label="Nome Completo" 
                              value={nome} 
                              onChangeText={setNome} />
@@ -93,14 +81,19 @@ function Registro() {
                 </View>
 
                 <View style={styles.buttonContainer}>
-                    {/* --- 5. Conecte o botão à sua função de envio --- */}
                     <Button texto="Cadastrar" 
-                        
                             onPress={handleRegistro} />
                 </View>
             </View>
-        </View>
-    </ScrollView>
+
+            {/* 4. ADICIONAMOS UM FOOTER (IGUAL AO DO LOGIN) */}
+            <View style={styles.footer}>
+                <TouchableOpacity onPress={() => navigation.navigate('Login')}>
+                    <Text style={styles.footerText}>Já tenho uma conta. Acessar.</Text>
+                </TouchableOpacity>
+            </View>
+        </SafeAreaView>
+    );
 }
 
 export default Registro;

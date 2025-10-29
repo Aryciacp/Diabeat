@@ -1,93 +1,107 @@
-import React, { useState } from "react";
-// 1. IMPORTAMOS ScrollView
+// Arquivo: UserProfile.jsx (CORRIGIDO com KeyboardAwareScrollView)
+
+import React, { useState, useEffect } from "react";
 import { 
     View, 
     Text, 
     TextInput, 
     TouchableOpacity, 
     Alert, 
-    ScrollView 
+    // ScrollView, // <--- REMOVIDO
+    ActivityIndicator 
 } from "react-native";
-import { styles } from "./userProfile.style.js";
+import { SafeAreaView } from "react-native-safe-area-context"; 
+import { styles } from "./usuario.style.js"; // Seus estilos
 import { FontAwesome } from "@expo/vector-icons";
-import api from "../../services/api"; // 2. IMPORTAMOS A API
+import api from "../../services/api";
+import { Picker } from '@react-native-picker/picker';
+
+// 1. IMPORTE A BIBLIOTECA DO TECLADO
+import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 
 export default function UserProfile() {
-    // Seus states (perfeitos!)
+    
+    // (Seus 'useState' e 'useEffect' estão 100% corretos)
+    const [nome, setNome] = useState("");
     const [diabetes, setDiabetes] = useState("");
     const [idade, setIdade] = useState("");
     const [telefone, setTelefone] = useState("");
     const [email, setEmail] = useState("");
-    const [senhaAtual, setSenhaAtual] = useState("");
-    const [novaSenha, setNovaSenha] = useState("");
-    const [confirmarSenha, setConfirmarSenha] = useState("");
-    const [mostrarSenha, setMostrarSenha] = useState(false);
+    const [isLoading, setIsLoading] = useState(true); 
+    const [originalData, setOriginalData] = useState(null); 
 
-    // --- 3. LÓGICA DE SALVAR CONECTADA AO BACKEND ---
+    useEffect(() => {
+        const fetchUserData = async () => {
+            try {
+                const response = await api.get('/users/me'); 
+                const user = response.data;
+                setNome(user.name || "");
+                setEmail(user.email || "");
+                setTelefone(user.phone || "");
+                setIdade(user.age ? String(user.age) : ""); 
+                setDiabetes(user.diabetesType || ""); 
+                setOriginalData(user); 
+            } catch (error) {
+                console.error("Erro ao carregar dados do usuário:", error);
+                Alert.alert("Erro", "Não foi possível carregar seus dados.");
+            } finally {
+                setIsLoading(false); 
+            }
+        };
+        fetchUserData();
+    }, []); 
+
+    // (Sua função 'handleSave' com a correção de crash está 100% correta)
     const handleSave = async () => {
-        // Validação de senhas (pré-envio)
-        if (novaSenha && (novaSenha !== confirmarSenha)) {
-            Alert.alert("Erro", "As novas senhas não coincidem ❌");
-            return;
-        }
-
-        // 1. Monta um objeto SÓ com os dados que o usuário quer alterar
-        const payload = {};
-        if (diabetes) payload.diabetesType = diabetes;
-        if (idade) payload.age = parseInt(idade);
-        if (telefone) payload.phone = telefone;
-        if (email) payload.email = email;
-
-        // 2. Lógica para só enviar a senha se o usuário preencheu os campos
-        if (novaSenha && senhaAtual) {
-            payload.currentPassword = senhaAtual;
-            payload.newPassword = novaSenha;
-        } else if (novaSenha || senhaAtual) {
-            // Se o usuário preencheu um mas não o outro
-            Alert.alert("Erro", "Para alterar a senha, preencha a senha atual e a nova senha.");
-            return;
-        }
-
-        // 3. Verifica se há algo para salvar
-        if (Object.keys(payload).length === 0) {
-            Alert.alert("Nada para salvar", "Nenhum campo foi alterado 😅");
+        if (!originalData) { // <--- Correção de crash
+            Alert.alert("Erro", "Os dados originais não foram carregados.");
             return;
         }
         
-        // 4. Chama a nova rota do backend (que ainda vamos criar)
+        const payload = {};
+        if (diabetes !== (originalData.diabetesType || "")) payload.diabetesType = diabetes;
+        if (parseInt(idade || 0) !== (originalData.age || 0)) payload.age = parseInt(idade || 0);
+        if (telefone !== (originalData.phone || "")) payload.phone = telefone;
+        if (email !== (originalData.email || "")) payload.email = email;
+
+        if (Object.keys(payload).length === 0) {
+            Alert.alert("Nada para salvar", "Nenhum campo foi alterado.");
+            return;
+        }
+        
         try {
-            // Usamos api.patch para enviar SÓ os campos alterados
-            // Precisamos do 'authMiddleware' no backend, então o token será enviado
-            // automaticamente pelo nosso 'api.ts' (que configuraremos)
             const response = await api.patch('/users/me', payload);
-
             Alert.alert("Sucesso!", "Seus dados foram salvos ✅");
-            console.log("Resposta do servidor:", response.data);
-
-            // Opcional: Limpar campos de senha após salvar
-            setSenhaAtual("");
-            setNovaSenha("");
-            setConfirmarSenha("");
-
+            setOriginalData(response.data); 
         } catch (error) {
             console.error("Erro ao salvar perfil:", error);
-            // O back-end pode retornar um erro (ex: "Senha atual incorreta")
             const errorMessage = error.response?.data?.error || "Não foi possível salvar as alterações.";
             Alert.alert("Erro", errorMessage);
         }
     };
 
+    // (Seu 'isLoading' está 100% correto)
+    if (isLoading) {
+        return (
+            <SafeAreaView style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
+                <ActivityIndicator size="large" color="#fff" />
+                <Text style={{ color: '#fff', marginTop: 10 }}>Carregando perfil...</Text>
+            </SafeAreaView>
+        );
+    }
+
+    // --- Tela principal ---
     return (
-        // 4. ESTRUTURA JSX CORRIGIDA COM SCROLLVIEW
-        <View style={styles.container}>
-            {/* Cabeçalho verde (fixo) */}
+        <SafeAreaView style={styles.container}>
+            
+            {/* Seu Cabeçalho (Header) - (Correto) */}
             <View style={styles.header}>
                 <View style={styles.profileContainer}>
                     <View style={styles.avatarPlaceholder}>
                         <FontAwesome name="user" size={40} color="#ccc" />
                     </View>
                     <View style={styles.nameContainer}>
-                        <Text style={styles.userName}>Arycia Antonio</Text>
+                        <Text style={styles.userName}>{nome}</Text> 
                         <TouchableOpacity>
                             <FontAwesome name="edit" size={18} color="#fff" style={styles.editIcon} />
                         </TouchableOpacity>
@@ -95,22 +109,45 @@ export default function UserProfile() {
                 </View>
             </View>
 
-            {/* O conteúdo rolável começa aqui */}
-            <ScrollView 
+            {/* 2. SUBSTITUA O <ScrollView> POR <KeyboardAwareScrollView> */}
+            <KeyboardAwareScrollView 
                 style={styles.scrollContainer} 
                 contentContainerStyle={styles.infoContainer}
                 keyboardShouldPersistTaps="handled"
+                enableOnAndroid={true}
+                extraScrollHeight={20} // Espacinho extra
+                enableAutomaticScroll={true}
             >
+                
+                {/* (Seu <Picker> de Diabetes está correto) */}
+                <View style={{
+                    width: "100%",
+                    backgroundColor: "#fff",
+                    borderWidth: 1,
+                    borderColor: "#ccc",
+                    borderRadius: 10,
+                    marginBottom: 15,
+                    height: 50, 
+                    justifyContent: 'center' 
+                }}> 
+                    <Picker
+                        selectedValue={diabetes}
+                        onValueChange={(itemValue) => setDiabetes(itemValue)}
+                        style={{ width: '100%', color: '#333' }}
+                        dropdownIconColor="#333"
+                    >
+                        <Picker.Item label="Diabetes tipo:" value="" style={{color: '#666'}} />
+                        <Picker.Item label="Diabetes tipo: 1" value="TIPO_1" />
+                        <Picker.Item label="Diabetes tipo: 2" value="TIPO_2" />
+                        <Picker.Item label="Diabetes Gestacional" value="GESTACIONAL" />
+                        <Picker.Item label="Não se aplica" value="NAO_SE_APLICA" />
+                    </Picker>
+                </View>
+
+                {/* (Seus <TextInput> estão corretos, com os placeholders certos) */}
                 <TextInput
                     style={styles.input}
-                    placeholder="Digite o tipo de diabetes"
-                    placeholderTextColor="#666"
-                    value={diabetes}
-                    onChangeText={setDiabetes}
-                />
-                <TextInput
-                    style={styles.input}
-                    placeholder="Digite sua idade"
+                    placeholder="Idade:"
                     placeholderTextColor="#666"
                     keyboardType="numeric"
                     value={idade}
@@ -118,7 +155,7 @@ export default function UserProfile() {
                 />
                 <TextInput
                     style={styles.input}
-                    placeholder="Digite seu telefone"
+                    placeholder="Telefone:"
                     placeholderTextColor="#666"
                     keyboardType="phone-pad"
                     value={telefone}
@@ -126,60 +163,21 @@ export default function UserProfile() {
                 />
                 <TextInput
                     style={styles.input}
-                    placeholder="Digite seu email"
+                    placeholder="Email:"
                     placeholderTextColor="#666"
                     keyboardType="email-address"
                     value={email}
                     onChangeText={setEmail}
                 />
 
-                {/* Campos de senha */}
-                <Text style={styles.sectionTitle}>Alterar senha</Text>
-                <TextInput
-                    style={styles.input}
-                    placeholder="Senha atual"
-                    placeholderTextColor="#666"
-                    secureTextEntry={!mostrarSenha}
-                    value={senhaAtual}
-                    onChangeText={setSenhaAtual}
-                />
-                <TextInput
-                    style={styles.input}
-                    placeholder="Nova senha"
-                    placeholderTextColor="#666"
-                    secureTextEntry={!mostrarSenha}
-                    value={novaSenha}
-                    onChangeText={setNovaSenha}
-                />
-                <TextInput
-                    style={styles.input}
-                    placeholder="Confirmar nova senha"
-                    placeholderTextColor="#666"
-                    secureTextEntry={!mostrarSenha}
-                    value={confirmarSenha}
-                    onChangeText={setConfirmarSenha}
-                />
-
-                {/* Mostrar senha */}
-                <TouchableOpacity
-                    style={styles.showPasswordButton}
-                    onPress={() => setMostrarSenha(!mostrarSenha)}
-                >
-                    <FontAwesome
-                        name={mostrarSenha ? "eye-slash" : "eye"}
-                        size={18}
-                        color="#2E9E53"
-                    />
-                    <Text style={styles.showPasswordText}>
-                        {mostrarSenha ? "Ocultar senhas" : "Mostrar senhas"}
-                    </Text>
-                </TouchableOpacity>
-
-                {/* Botão salvar */}
+                {/* (Seu Botão Salvar está correto) */}
                 <TouchableOpacity style={styles.saveButton} onPress={handleSave}>
                     <Text style={styles.saveButtonText}>Salvar alterações</Text>
                 </TouchableOpacity>
-            </ScrollView>
-        </View>
+                
+            </KeyboardAwareScrollView> 
+            {/* 3. FIM DO <KeyboardAwareScrollView> */}
+
+        </SafeAreaView>
     );
 }

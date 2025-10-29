@@ -5,7 +5,7 @@ import Header from "../../components/header/header.jsx";
 import TextBox from "../../components/textbox/textbox.jsx";
 import Button from "../../components/button/button.jsx";
 import { useState } from "react";
-import api from "../../services/api.js";
+import api from "../../services/api";
 
 // 1. A tela precisa receber "route" para pegar os parâmetros da navegação
 function ResetPassword({ navigation, route }) {

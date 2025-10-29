@@ -1,42 +1,51 @@
-// EM: registro.style.js
+// Em: src/pages/registro/registro.style.js (CORRIGIDO)
 import { COLORS, FONT_SIZE } from "../../constants/theme";
 
 export const styles = {
-    // 1. O container principal: ocupa 100% da tela
+    // 1. O container principal (ocupa a tela toda)
     container: {
-        flex: 1,
-        backgroundColor: "#46A376", // O seu fundo verde
-        paddingHorizontal: 20,
-    },
-
-    // 2. O grupo do formulário: ocupa o "meio"
-    formGroup: {
-        flex: 1, // "Cresce" para ocupar o espaço livre
-        justifyContent: "center", // Centraliza o formulário no meio
-        width: "100%",
-    },
-
-    // 3. Cada item do formulário
-    form: {
-        width: "100%",
-        marginBottom: 20,
+        flex: 1, 
+        backgroundColor: "#46A376", // Mesmo verde do Login
     },
     
-    // 4. O container do botão (igual ao 'form' para manter o alinhamento)
-    buttonContainer: {
-        width: "100%",
-        marginTop: 20, // Um espaço extra antes do botão
+    // 2. O ScrollView (é onde o conteúdo vai rolar)
+    scrollContainer: {
+        flexGrow: 1, // Garante que o conteúdo possa crescer
+        justifyContent: 'space-between', // Joga o footer para o final
+        alignItems: 'center', // Centraliza tudo
+        paddingHorizontal: 15, // Padding lateral (para os inputs não colarem na borda)
+        paddingVertical: 30, // Um espaço em cima e embaixo
     },
 
-    // 5. O rodapé: fica "naturalmente" embaixo
+    // 3. O grupo do formulário (agora com 100% de largura)
+    formGroup: {
+        width: "100%", // Ocupa 100% da largura (que tem o padding de 15)
+        alignItems: 'center', // Centraliza a logo
+    },
+
+    // 4. Texto "Cadastro:"
+    welcomeText: {
+        fontSize: FONT_SIZE.lg, 
+        color: COLORS.white,
+        fontWeight: 'bold',
+        marginBottom: 25,
+        alignSelf: 'flex-start', // Alinha à esquerda
+    },
+
+    // 5. Cada item do formulário
+    form: {
+        width: "100%",
+        marginBottom: 15,
+    },
+
+    // 6. O rodapé (para o link "Já tenho uma conta")
     footer: {
         width: "100%",
-        paddingBottom: 40, // Um respiro na parte de baixo
     },
 
     footerText: {
         textAlign: "center",
-        color: "#FFF", // Texto branco
-        fontSize: 16
+        color: COLORS.white, 
+        fontSize: FONT_SIZE.md
     },
 }

@@ -4,38 +4,39 @@ export const styles = {
     // 1. O container principal: ocupa 100% da tela
     container: {
         flex: 1,
-        backgroundColor: "#46A376", // O seu fundo verde
+        backgroundColor: "#46A376",
         paddingHorizontal: 20,
     },
 
-    // 2. O grupo do formulário: ocupa o "meio"
+    // 2. O grupo do formulário: centralizado vertical e horizontalmente
     formGroup: {
-        flex: 1, // "Cresce" para ocupar o espaço livre
-        justifyContent: "center", // Centraliza o formulário no meio
+        flex: 1,
+        justifyContent: "center", // centraliza verticalmente
+        alignItems: "center", // centraliza horizontalmente
         width: "100%",
     },
 
     // 3. Cada item do formulário
     form: {
-        width: "100%",
+        width: "80%", // menor que 100% pra ficar centralizado e não colar nas bordas
         marginBottom: 20,
     },
     
     // 4. O container do botão
     buttonContainer: {
-        width: "100%",
-        marginTop: 20, // Um espaço extra antes do botão
+        width: "80%", // mesma largura dos inputs
+        marginTop: 20,
     },
 
-    // 5. O rodapé: fica "naturalmente" embaixo
+    // 5. O rodapé
     footer: {
         width: "100%",
-        paddingBottom: 40, // Um respiro na parte de baixo
+        paddingBottom: 40,
     },
 
     footerText: {
         textAlign: "center",
-        color: "#FFF", // Texto branco
+        color: "#FFF",
         fontSize: 16
     },
-}
+};

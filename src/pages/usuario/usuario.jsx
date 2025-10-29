@@ -121,14 +121,20 @@ export default function UserProfile() {
                 
                 {/* (Seu <Picker> de Diabetes está correto) */}
                 <View style={{
-                    width: "100%",
-                    backgroundColor: "#fff",
-                    borderWidth: 1,
-                    borderColor: "#ccc",
-                    borderRadius: 10,
-                    marginBottom: 15,
-                    height: 50, 
-                    justifyContent: 'center' 
+                width: "100%",
+                height: 65, // igual aos outros inputs
+                backgroundColor: "#fff",
+                borderWidth: 1.5,
+                borderColor: "#C7C7C7",
+                borderRadius: 14,
+                paddingHorizontal: 16,
+                marginBottom: 18,
+                justifyContent: "center",
+                elevation: 2, // sombra sutil no Android
+                shadowColor: "#000",
+                shadowOffset: { width: 0, height: 2 },
+                shadowOpacity: 0.08,
+                shadowRadius: 3,
                 }}> 
                     <Picker
                         selectedValue={diabetes}
@@ -169,7 +175,6 @@ export default function UserProfile() {
                     value={email}
                     onChangeText={setEmail}
                 />
-
                 {/* (Seu Botão Salvar está correto) */}
                 <TouchableOpacity style={styles.saveButton} onPress={handleSave}>
                     <Text style={styles.saveButtonText}>Salvar alterações</Text>

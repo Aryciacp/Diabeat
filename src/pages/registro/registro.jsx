@@ -70,11 +70,12 @@ function Registro({ navigation }) {
                 {/* Grupo do Formulário (Topo) */}
                 <View style={styles.formGroup}>
                     {/* Logo */}
-                    <View style={{ marginBottom: 30, alignItems: 'center' }}>
-                        <Image 
-                            source={LogoImage} 
-                            style={{ width: 150, height: 150, resizeMode: 'contain' }} 
-                        />
+                    <View style={{ marginBottom: 0, alignItems: 'center' }}>
+            <Image 
+                source={LogoImage} 
+                style={{ width: 230, height: 230, resizeMode: 'contain' }} 
+            />
+
                     </View>
                     
                     <Text style={styles.welcomeText}>Cadastro:</Text> 

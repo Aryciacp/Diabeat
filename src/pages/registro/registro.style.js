@@ -1,51 +1,60 @@
-// Em: src/pages/registro/registro.style.js (CORRIGIDO)
-import { COLORS, FONT_SIZE } from "../../constants/theme";
+// EM: src/pages/registro/registro.style.js (CORRIGIDO E AJUSTADO)
+import { FONT_SIZE } from "../../constants/theme";
+import { Dimensions } from "react-native";
+
+const { height } = Dimensions.get("window");
+const isSmallScreen = height < 700;
 
 export const styles = {
-    // 1. O container principal (ocupa a tela toda)
+    // Container principal
     container: {
-        flex: 1, 
-        backgroundColor: "#46A376", // Mesmo verde do Login
+        flex: 1,
+        backgroundColor: "#46A376", // mesmo verde do login e mudar senha
     },
-    
-    // 2. O ScrollView (é onde o conteúdo vai rolar)
+
+    // ScrollView — área rolável
     scrollContainer: {
-        flexGrow: 1, // Garante que o conteúdo possa crescer
-        justifyContent: 'space-between', // Joga o footer para o final
-        alignItems: 'center', // Centraliza tudo
-        paddingHorizontal: 15, // Padding lateral (para os inputs não colarem na borda)
-        paddingVertical: 30, // Um espaço em cima e embaixo
+        flexGrow: 1,
+        justifyContent: "space-between",
+        alignItems: "center",
+        paddingHorizontal: 15,
+        paddingVertical: isSmallScreen ? 20 : 35,
     },
 
-    // 3. O grupo do formulário (agora com 100% de largura)
+    // Agrupamento da logo e do formulário
     formGroup: {
-        width: "100%", // Ocupa 100% da largura (que tem o padding de 15)
-        alignItems: 'center', // Centraliza a logo
+        width: "100%",
+        alignItems: "center",
+        marginTop: isSmallScreen ? 20 : height * 0.06, // diminui o espaçamento
+        marginBottom: isSmallScreen ? 25 : 45,
     },
 
-    // 4. Texto "Cadastro:"
+    // “Cadastro”
     welcomeText: {
-        fontSize: FONT_SIZE.lg, 
-        color: COLORS.white,
-        fontWeight: 'bold',
+        fontSize: isSmallScreen ? FONT_SIZE.md : FONT_SIZE.lg,
+        color: "#FFFFFF", // branco fixo, independente do tema
+        fontWeight: "bold",
         marginBottom: 25,
-        alignSelf: 'flex-start', // Alinha à esquerda
+        alignSelf: "flex-start",
     },
 
-    // 5. Cada item do formulário
+    // Inputs do formulário
     form: {
         width: "100%",
-        marginBottom: 15,
+        marginBottom: 25,
     },
 
-    // 6. O rodapé (para o link "Já tenho uma conta")
+    // Rodapé (“Já tenho uma conta”)
     footer: {
         width: "100%",
+        alignItems: "center",
+        marginTop: 20,
     },
 
     footerText: {
         textAlign: "center",
-        color: COLORS.white, 
-        fontSize: FONT_SIZE.md
+        color: "#FFFFFF", // branco fixo
+        fontSize: FONT_SIZE.md,
+        opacity: 1,
     },
-}
+};

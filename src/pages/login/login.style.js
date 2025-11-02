@@ -1,4 +1,4 @@
-// login.style.js (LOGO MAIS BAIXA + INPUTS MAIORES)
+// login.style.js (AJUSTADO - textos brancos)
 import { COLORS, FONT_SIZE } from "../../constants/theme";
 import { Dimensions } from "react-native";
 
@@ -6,18 +6,15 @@ const { width, height } = Dimensions.get("window");
 const isSmallScreen = height < 700;
 
 export const styles = {
-    // Container principal
     container: {
         flex: 1,
         backgroundColor: "#46A376",
     },
 
-    // KeyboardAvoidingView
     keyboardView: {
         flex: 1,
     },
 
-    // ScrollView — mantém a rolagem suave e os espaçamentos equilibrados
     scrollContainer: {
         flexGrow: 1,
         justifyContent: "space-between",
@@ -26,40 +23,38 @@ export const styles = {
         paddingVertical: isSmallScreen ? 15 : 35,
     },
 
-    // Logo e boas-vindas (mais pra baixo agora)
     formGroup: {
         width: "100%",
         alignItems: "center",
-        marginTop: isSmallScreen ? 40 : height * 0.12, // joga a logo mais pra baixo
+        marginTop: isSmallScreen ? 40 : height * 0.12,
         marginBottom: isSmallScreen ? 25 : 45,
     },
 
+    // “Bem-vindo”
     welcomeText: {
         fontSize: isSmallScreen ? FONT_SIZE.md : FONT_SIZE.lg,
-        color: COLORS.white,
+        color: "#FFFFFF", // forçado pra branco
         fontWeight: "bold",
         marginBottom: 25,
         alignSelf: "flex-start",
     },
 
-    // Formulário — inputs maiores
     form: {
         width: "100%",
         marginBottom: 25,
-        gap: 30, // mais espaçamento entre campos
+        gap: 20,
     },
 
-    // Inputs personalizados (se estiver usando TextBox, esse estilo pode ser aplicado dentro dele)
     input: {
-        height: isSmallScreen ? 50 : 60, // inputs mais altos
+        height: isSmallScreen ? 50 : 60,
         borderRadius: 10,
-        backgroundColor: COLORS.white,
+        backgroundColor: "#FFFFFF",
         paddingHorizontal: 15,
-        fontSize: FONT_SIZE.lg, // texto maior nos inputs
+        fontSize: FONT_SIZE.lg,
         elevation: 2,
     },
 
-    // "Esqueceu a senha"
+    // “Esqueceu a senha?”
     forgotPasswordContainer: {
         width: "100%",
         alignItems: "flex-end",
@@ -68,12 +63,12 @@ export const styles = {
     },
 
     forgotPasswordText: {
-        color: COLORS.white,
+        color: "#FFFFFF", // forçado pra branco
         fontSize: FONT_SIZE.md,
         fontWeight: "500",
     },
 
-    // Rodapé
+    // “Ou se cadastre”
     footer: {
         width: "100%",
         alignItems: "center",
@@ -82,7 +77,7 @@ export const styles = {
 
     footerText: {
         textAlign: "center",
-        color: COLORS.white,
+        color: "#FFFFFF", // forçado pra branco
         fontSize: FONT_SIZE.md,
         opacity: 0.9,
     },

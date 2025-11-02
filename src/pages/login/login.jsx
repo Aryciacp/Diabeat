@@ -1,78 +1,107 @@
-// EM: src/pages/login/login.jsx
+// EM: src/pages/login/login.jsx (CORRIGIDO)
 
+import React, { useState, useEffect } from "react"; // <-- Import 'useEffect'
 import { 
     View, 
     Text, 
     TouchableOpacity, 
     Alert, 
     StyleSheet,
-    Image 
-    // Removemos KeyboardAvoidingView, ScrollView, Platform
+    Image,
+    Button as BotaoNativo // <-- 'Button' nativo renomeado
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { styles } from "./login.style";
 import { COLORS, FONT_SIZE } from "../../constants/theme"; 
-const LogoImage = require('../../assets/logo.png'); // (Verifique se este caminho está correto)
+const LogoImage = require('../../assets/logo.png'); // (Verifique este caminho!)
 
-// 1. Importe a biblioteca do teclado
+// Importe a biblioteca do teclado
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 
+// Imports do Google Auth
+import * as WebBrowser from 'expo-web-browser';
+import * as Google from 'expo-auth-session/providers/google';
+
 import TextBox from "../../components/textbox/textbox.jsx";
-import Button from "../../components/button/button.jsx";
-import { useState } from "react";
-import api from "../../services/api";
+import Button from "../../components/button/button.jsx"; // O seu botão customizado
+import api from "../../services/api"; // Importa a API (mock ou real)
+
+// Necessário para o fluxo web do Google Auth
+WebBrowser.maybeCompleteAuthSession();
 
 function Login({ navigation }) {
     const [email, setEmail] = useState("");
     const [senha, setSenha] = useState("");
 
-    const handleLogin = async () => {
+    // --- LÓGICA DO GOOGLE SIGN-IN (CORRIGIDA) ---
+    // Deixamos APENAS o 'expoClientId' para forçar o fluxo WEB no Expo Go
+    const [request, response, promptAsync] = Google.useIdTokenAuthRequest({
         
-        // --- LOGIN FALSO (MOCK) CORRIGIDO ---
-        // Agora verifica E-mail E Senha
+        // 1. Deixe APENAS o seu ID de cliente WEB (o que você criou para o Expo Go)
+        expoClientId: '476403505993-4rgdk8p9kc15v9kbt70c5gfbg5ojn6if.apps.googleusercontent.com',
+        androidClientId: '476403505993-60097qa14u69nu6g8ds7c9b6jm6hlgok.apps.googleusercontent.com',
+        // 2. Mantenha os escopos
+        scopes: ['openid', 'profile', 'email'],
+
+        useProxy: true,
+        // 3. (As linhas 'androidClientId' e 'iosClientId' foram REMOVIDAS)
+    });
+
+    // Hook que "ouve" a resposta do Google
+    useEffect(() => {
+        if (response?.type === 'success') {
+            const { id_token } = response.params;
+            console.log('ID Token recebido do Google. Verificando no backend...');
+            verificarTokenNoBackend(id_token);
+        } else if (response?.type === 'error') {
+            Alert.alert('Erro no Login Google', response.params.error_description || 'Algo deu errado');
+        }
+    }, [response]);
+
+    // Função que envia o token do Google para o SEU backend
+    const verificarTokenNoBackend = async (token) => {
+        try {
+            const backendResponse = await api.post('/auth/google/verify', { token }); 
+            const { token: siteToken } = backendResponse.data; 
+            api.defaults.headers.common['Authorization'] = `Bearer ${siteToken}`;
+            Alert.alert("Sucesso!", "Login com Google realizado!");
+            navigation.navigate('UserProfile');
+        } catch (error) {
+            console.error('Erro ao verificar token no backend:', error.response?.data || error.message);
+            Alert.alert('Erro no Login', 'Falha ao verificar as credenciais com o servidor.');
+        }
+    };
+    // --- FIM DA LÓGICA DO GOOGLE ---
+
+    // --- (Sua função handleLogin (Mock e Real) ---
+    const handleLogin = async () => {
         if (email.toLowerCase() === 'admin@admin.com' && senha === 'admin') {
           console.log("LOGIN MOCK DE ADMIN DETECTADO!");
-          
-          api.enableMockMode(); // Ativa o "interruptor" no api.js
-          
+          api.enableMockMode(); 
           Alert.alert(
               "Sucesso (Modo Mock)!", 
               "Logado como Admin de Frontend. A API real está desligada.",
               [{ text: "OK", onPress: () => navigation.navigate('UserProfile') }] 
           );
-          
-          return; // Para a função aqui
+          return; 
         }
-        // --- FIM DA CORREÇÃO ---
-
         
-        // --- LOGIN REAL ---
         if (!email || !senha) {
             Alert.alert("Atenção", "Por favor, preencha e-mail e senha.");
             return;
         }
 
         try {
-            // Se o modo mock não foi ativado, esta chamada usa a 'realApi'
             const response = await api.post('/users/login', { email, password: senha });
             const { token } = response.data;
-            
-            // Salva o token nos headers da 'realApi'
             api.defaults.headers.common['Authorization'] = `Bearer ${token}`; 
-            
             Alert.alert(
-                "Sucesso!", 
-                "Login realizado com sucesso!",
-                [{ text: "OK", onPress: () => navigation.navigate('UserProfile') }] 
-            );
+            "Sucesso!", 
+            "Login realizado com sucesso!",
+            [{ text: "OK", onPress: () => navigation.navigate('MainApp') }] 
+        );
         } catch (error) {
-            if (error.response) {
-                Alert.alert("Erro", "E-mail ou senha incorretos. Tente novamente.");
-            } else if (error.request) {
-                Alert.alert("Erro de Conexão", "Não foi possível conectar ao servidor.");
-            } else {
-                Alert.alert("Erro", "Ocorreu um erro inesperado.");
-            }
+            // ... (seu catch de erro de login)
         }
     };
     
@@ -84,27 +113,16 @@ function Login({ navigation }) {
                 contentContainerStyle={styles.scrollContainer} 
                 keyboardShouldPersistTaps="handled"
                 enableOnAndroid={true}
-                extraScrollHeight={75} // Ajuste para o scroll automático
+                extraScrollHeight={75} 
                 enableAutomaticScroll={true}
                 keyboardOpeningTime={0}
-                
-                // --- PROPS PARA DESATIVAR O SCROLL MANUAL ---
-                
-                // 1. Esconde a barra lateral de rolagem
                 showsVerticalScrollIndicator={false}
-                
-                // 2. Desativa a rolagem manual (arrastar com o dedo)
-                // (AVISO: Se o scroll automático quebrar, remova esta linha)
                 scrollEnabled={false} 
-                
-                // --- FIM DAS NOVAS PROPS ---
             >
-                
-                {/* O resto do seu layout (formGroup e footer) */}
                 
                 <View style={styles.formGroup}>
                     {/* Logo */}
-                    <View style={{ marginBottom: 30, alignItems: 'center' }}>
+                    <View style={{marginTop: -100, marginBottom: -30, alignItems: 'center' }}>
                         <Image 
                             source={LogoImage} 
                             style={{ width: 250, height: 250, resizeMode: 'contain' }} 
@@ -118,7 +136,7 @@ function Login({ navigation }) {
                             label="E-mail"
                             value={email}
                             onChangeText={setEmail}
-                            keyboardType="email-address"
+                            // ... (outras props)
                             labelStyle={{ color: COLORS.white }}
                             inputStyle={{ backgroundColor: '#fff', borderColor: 'transparent' }} 
                             textInputStyle={{ color: '#000' }} 
@@ -143,14 +161,19 @@ function Login({ navigation }) {
                         <Button 
                             texto="Login" 
                             onPress={handleLogin} 
-                            buttonStyle={{ 
-                                width: '100%', 
-                                backgroundColor: '#008000' 
-                            }} 
-                            textStyle={{ 
-                                color: COLORS.white, 
-                                fontWeight: 'bold' 
-                            }} 
+                            // ... (styles do botão)
+                        />
+                    </View>
+
+                    {/* Botão do Google */}
+                    <View style={styles.form}>
+                        <BotaoNativo 
+                            disabled={!request} 
+                            title="Entrar com Google"
+                            onPress={() => {
+                              promptAsync(); 
+                            }}
+                            color="#DB4437"
                         />
                     </View>
 

@@ -5,7 +5,7 @@ import axios from 'axios';
 // --- 1. A API REAL ---
 // (Use o seu IP real aqui, como antes)
 const realApi = axios.create({
-  baseURL: 'http://192.168.0.9:3000' // <-- SEU IP REAL DO BACKEND
+  baseURL: 'http://10.0.2.2:3000' // <-- SEU IP REAL DO BACKEND
 });
 
 // --- 2. DADOS FALSOS PARA SUA AMIGA ---

@@ -1,4 +1,4 @@
-// Em: App.js (COMPLETO com 'linking' prop)
+// Em: App.js (COMPLETO E CORRIGIDO)
 
 import React from 'react';
 import { View, StyleSheet } from 'react-native'; 
@@ -16,10 +16,14 @@ import UserProfile from './src/pages/usuario/usuario.jsx';
 import MudarSenha from './src/pages/MudarSenha/MudarSenha.jsx';
 import Glicemia from './src/pages/Glicemia/Glicemia.jsx';
 
+// --- 1. ADICIONE A IMPORTAÇÃO DA TELA QUE FALTAVA ---
+import RegistroGlicemico from './src/pages/RegistroGlicemico/RegistroGlicemico.jsx';
+
+
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
 
-// --- 1. ADICIONE A CONFIGURAÇÃO DE LINKING AQUI ---
+// --- Configuração de Linking (Deep Link) ---
 const linking = {
   prefixes: ['diabeat://'], // O 'scheme' do seu app.json
   config: {
@@ -38,7 +42,23 @@ function MainAppTabs() {
     return (
         <Tab.Navigator
             screenOptions={({ route }) => ({
-                // ... (seu código de screenOptions das abas)
+                headerShown: false, 
+                tabBarShowLabel: false,
+                tabBarInactiveTintColor: '#BDBDBD',
+                tabBarStyle: {
+                    position: 'absolute',
+                    bottom: 25,
+                    left: 20,
+                    right: 20,
+                    backgroundColor: '#FFFFFF',
+                    borderRadius: 20,
+                    height: 70,
+                    elevation: 5,
+                    shadowColor: '#000',
+                    shadowOffset: { width: 0, height: 2 },
+                    shadowOpacity: 0.1,
+                    shadowRadius: 4,
+                }
             })}
         >
             {/* Aba 1: Perfil (Ícone de Casa) */}
@@ -93,7 +113,7 @@ function MainAppTabs() {
     );
 }
 
-// --- 2. O Navegador Principal (com a prop 'linking') ---
+// --- O Navegador Principal (com a prop 'linking') ---
 export default function App() {
     return (
         // --- ADICIONE A PROP 'linking' AQUI ---
@@ -116,6 +136,16 @@ export default function App() {
                     name="MainApp"
                     component={MainAppTabs} 
                 />
+
+                {/* --- 2. ADICIONE A TELA DE REGISTRO GLICÊMICO AQUI --- */}
+                <Stack.Screen 
+                    name="RegistroGlicemico"
+                    component={RegistroGlicemico}
+                    options={{
+                        presentation: 'modal' // Faz a tela deslizar de baixo para cima
+                    }}
+                />
+
             </Stack.Navigator>
         </NavigationContainer>
     );

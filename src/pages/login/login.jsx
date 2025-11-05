@@ -75,7 +75,7 @@ function Login({ navigation }) {
 
     // --- (Sua função handleLogin (Mock e Real) ---
     const handleLogin = async () => {
-        if (email.toLowerCase() === 'admin@admin.com' && senha === 'admin') {
+        if (email.toLowerCase() === 'admin@admin.com' && senha === 'admim') {
           console.log("LOGIN MOCK DE ADMIN DETECTADO!");
           api.enableMockMode(); 
           Alert.alert(

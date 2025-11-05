@@ -48,9 +48,9 @@ function MainAppTabs() {
         tabBarActiveTintColor: "#46A376",
         tabBarStyle: {
           position: "absolute",
-          bottom: 40, // fixo no rodapé
-          left: "50%", // centraliza horizontalmente
-          transform: [{ translateX: 1 * 130 }], // desloca metade da largura pra ficar bem central
+          bottom: 45, // fixo no rodapé
+          left: "60%", // centraliza horizontalmente
+          transform: [{ translateX: 1 * 75 }], // desloca metade da largura pra ficar bem central
           width: 250, // comprimento fixo pra alinhar bem
           backgroundColor: "#FFFFFF",
           borderRadius: 25,

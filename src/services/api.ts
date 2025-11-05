@@ -12,7 +12,7 @@ const realApi = axios.create({
 // (Ela pode mudar esses dados para testar o layout)
 const FAKE_USER_DATA = {
   id: 'admin-id-fake',
-  name: 'Amiga do Front (Admin)',
+  name: 'Arycia (Admin)',
   email: 'admin@admin.com',
   phone: '99 99999-9999',
   age: 25,

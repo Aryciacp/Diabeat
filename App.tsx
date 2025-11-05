@@ -39,80 +39,83 @@ const linking = {
 
 // --- (Função 'MainAppTabs' - Sem mudanças) ---
 function MainAppTabs() {
-    return (
-        <Tab.Navigator
-            screenOptions={({ route }) => ({
-                headerShown: false, 
-                tabBarShowLabel: false,
-                tabBarInactiveTintColor: '#BDBDBD',
-                tabBarStyle: {
-                    position: 'absolute',
-                    bottom: 25,
-                    left: 20,
-                    right: 20,
-                    backgroundColor: '#FFFFFF',
-                    borderRadius: 20,
-                    height: 70,
-                    elevation: 5,
-                    shadowColor: '#000',
-                    shadowOffset: { width: 0, height: 2 },
-                    shadowOpacity: 0.1,
-                    shadowRadius: 4,
-                }
-            })}
-        >
-            {/* Aba 1: Perfil (Ícone de Casa) */}
-            <Tab.Screen
-                name="Perfil"
-                component={UserProfile}
-                options={{
-                    tabBarIcon: ({ color, size, focused }) => (
-                        focused ? (
-                            <View style={styles.focusedIconContainer}>
-                                <FontAwesome name="home" size={size} color="#FFFFFF" />
-                            </View>
-                        ) : (
-                            <FontAwesome name="home" size={size} color={color} />
-                        )
-                    ),
-                }}
-            />
-            {/* Aba 2: Glicemia (Ícone de Chat) */}
-            <Tab.Screen
-                name="Glicemia"
-                component={Glicemia}
-                options={{
-                    tabBarIcon: ({ color, size, focused }) => (
-                        focused ? (
-                            <View style={styles.focusedIconContainer}>
-                                <FontAwesome name="comment" size={size} color="#FFFFFF" />
-                            </View>
-                        ) : (
-                            <FontAwesome name="comment" size={size} color={color} />
-                        )
-                    ),
-                }}
-            />
-            {/* Aba 3: Xícara (Exemplo) */}
-            <Tab.Screen
-                name="Refeicoes"
-                component={Glicemia} // Placeholder
-                options={{
-                    tabBarIcon: ({ color, size, focused }) => (
-                        focused ? (
-                            <View style={styles.focusedIconContainer}>
-                                <FontAwesome name="coffee" size={size} color="#FFFFFF" />
-                            </View>
-                        ) : (
-                            <FontAwesome name="coffee" size={size} color={color} />
-                        )
-                    ),
-                }}
-            />
-        </Tab.Navigator>
-    );
-}
+  return (
+    <Tab.Navigator
+      screenOptions={({ route }) => ({
+        headerShown: false,
+        tabBarShowLabel: false,
+        tabBarInactiveTintColor: "#BDBDBD",
+        tabBarActiveTintColor: "#46A376",
+        tabBarStyle: {
+          position: "absolute",
+          bottom: 40, // fixo no rodapé
+          left: "50%", // centraliza horizontalmente
+          transform: [{ translateX: 1 * 130 }], // desloca metade da largura pra ficar bem central
+          width: 250, // comprimento fixo pra alinhar bem
+          backgroundColor: "#FFFFFF",
+          borderRadius: 25,
+          height: 80,
+          flexDirection: "row",
+          justifyContent: "space-evenly", // distribui igualmente os 3 botões
+          alignItems: "center", // alinha verticalmente
+          elevation: 8,
+          shadowColor: "#000",
+          shadowOffset: { width: 0, height: 2 },
+          shadowOpacity: 0.1,
+          shadowRadius: 4,
+        },
+      })}
+    >
+      {/* Aba 1: Perfil */}
+      <Tab.Screen
+        name="Perfil"
+        component={UserProfile}
+        options={{
+          tabBarIcon: ({ color, size, focused }) =>
+            focused ? (
+              <View style={styles.focusedIconContainer}>
+                <FontAwesome name="home" size={size} color="#FFFFFF" />
+              </View>
+            ) : (
+              <FontAwesome name="home" size={size} color={color} />
+            ),
+        }}
+      />
 
+      {/* Aba 2: Glicemia */}
+      <Tab.Screen
+        name="Glicemia"
+        component={Glicemia}
+        options={{
+          tabBarIcon: ({ color, size, focused }) =>
+            focused ? (
+              <View style={styles.focusedIconContainer}>
+                <FontAwesome name="comment" size={size} color="#FFFFFF" />
+              </View>
+            ) : (
+              <FontAwesome name="comment" size={size} color={color} />
+            ),
+        }}
+      />
+
+      {/* Aba 3: Refeições */}
+      <Tab.Screen
+        name="Refeicoes"
+        component={Glicemia}
+        options={{
+          tabBarIcon: ({ color, size, focused }) =>
+            focused ? (
+              <View style={styles.focusedIconContainer}>
+                <FontAwesome name="coffee" size={size} color="#FFFFFF" />
+              </View>
+            ) : (
+              <FontAwesome name="coffee" size={size} color={color} />
+            ),
+        }}
+      />
+    </Tab.Navigator>
+  );
+}
 // --- O Navegador Principal (com a prop 'linking') ---
 export default function App() {
     return (
@@ -154,7 +157,7 @@ export default function App() {
 // --- Estilos do Ícone Focado (Sem mudanças) ---
 const styles = StyleSheet.create({
     focusedIconContainer: {
-        backgroundColor: '#2E7D5A', 
+        backgroundColor: '#46A376', 
         width: 44,  
         height: 44, 
         borderRadius: 12, 

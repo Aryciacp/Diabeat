@@ -183,7 +183,10 @@ export default function Glicemia({ navigation }) {
                     <FontAwesome name="history" size={20} color="#fff" />
                     <Text style={styles.actionButtonText}>Ver Histórico</Text>
                 </TouchableOpacity>
-                <TouchableOpacity style={styles.actionButton}>
+                <TouchableOpacity 
+                    style={styles.actionButton}
+                    onPress={() => navigation.navigate('Exames')}
+                >
                     <FontAwesome name="file-text" size={20} color="#fff" />
                     <Text style={styles.actionButtonText}>Visualizar Exames</Text>
                 </TouchableOpacity>

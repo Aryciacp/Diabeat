@@ -1,7 +1,8 @@
-// Em: App.js (COMPLETO E CORRIGIDO)
+// Em: App.js (COMPLETO E RESPONSIVO)
 
 import React from 'react';
-import { View, StyleSheet } from 'react-native'; 
+// 1. IMPORTE 'Dimensions'
+import { View, StyleSheet, Dimensions } from 'react-native'; 
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
@@ -15,29 +16,28 @@ import ResetPassword from './src/pages/ResetPassword/ResetPassword.jsx';
 import UserProfile from './src/pages/usuario/usuario.jsx';
 import MudarSenha from './src/pages/MudarSenha/MudarSenha.jsx';
 import Glicemia from './src/pages/Glicemia/Glicemia.jsx';
-
-// --- 1. ADICIONE A IMPORTAÇÃO DA TELA QUE FALTAVA ---
 import RegistroGlicemico from './src/pages/RegistroGlicemico/RegistroGlicemico.jsx';
+import Exames from './src/pages/Exames/Exames.jsx';
+import UploadExame from './src/pages/UploadExame/UploadExame.jsx';
 
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
 
+// 2. PEGUE A LARGURA DA TELA
+const { width } = Dimensions.get('window');
+
 // --- Configuração de Linking (Deep Link) ---
 const linking = {
-  prefixes: ['diabeat://'], // O 'scheme' do seu app.json
+  prefixes: ['diabeat://'],
   config: {
     screens: {
-      // Mapeia o link diabeat://reset-password
-      // para a tela 'ResetPassword' do Stack.Navigator
       ResetPassword: 'reset-password', 
     }
   }
 };
-// --- FIM DA ADIÇÃO ---
 
-
-// --- (Função 'MainAppTabs' - Sem mudanças) ---
+// --- (Função 'MainAppTabs' - COM A CORREÇÃO) ---
 function MainAppTabs() {
     return (
         <Tab.Navigator
@@ -45,14 +45,23 @@ function MainAppTabs() {
                 headerShown: false, 
                 tabBarShowLabel: false,
                 tabBarInactiveTintColor: '#BDBDBD',
+                
+                // --- 3. ESTILO DA BARRA CORRIGIDO ---
                 tabBarStyle: {
-                    position: 'absolute',
-                    bottom: 25,
-                    left: 20,
-                    right: 20,
+                    position: 'absolute',   // Continua flutuante
+                    bottom: 35,             // Distância do fundo
+                    
+                    // --- MUDANÇAS AQUI ---
+                    // Removemos 'left' e 'right'
+                    // Adicionamos uma largura responsiva e centralizamos
+                    width: width * 0.6,     // Ex: 70% da largura da tela
+                    maxWidth: 400,          // Limite máximo para telas muito grandes
+                    alignSelf: 'center',    // Centraliza a barra
+                    // --- FIM DAS MUDANÇAS ---
+
                     backgroundColor: '#FFFFFF',
-                    borderRadius: 20,
-                    height: 70,
+                    borderRadius: 20,       
+                    height: 70,             
                     elevation: 5,
                     shadowColor: '#000',
                     shadowOffset: { width: 0, height: 2 },
@@ -113,10 +122,9 @@ function MainAppTabs() {
     );
 }
 
-// --- O Navegador Principal (com a prop 'linking') ---
+// --- O Navegador Principal (Stack) ---
 export default function App() {
     return (
-        // --- ADICIONE A PROP 'linking' AQUI ---
         <NavigationContainer linking={linking}> 
             <Stack.Navigator
                 initialRouteName="Login"
@@ -131,21 +139,31 @@ export default function App() {
                 <Stack.Screen name="ResetPassword" component={ResetPassword} />
                 <Stack.Screen name="MudarSenha" component={MudarSenha} />
                 
-                {/* Tela DEPOIS do Login (com as abas) */}
+                {/* Tela DEPOIS do Login (que contém TODAS as abas) */}
                 <Stack.Screen 
                     name="MainApp"
                     component={MainAppTabs} 
                 />
 
-                {/* --- 2. ADICIONE A TELA DE REGISTRO GLICÊMICO AQUI --- */}
+                {/* Telas "Modais" (que abrem por cima das abas) */}
                 <Stack.Screen 
                     name="RegistroGlicemico"
                     component={RegistroGlicemico}
-                    options={{
-                        presentation: 'modal' // Faz a tela deslizar de baixo para cima
+                    options={{ presentation: 'modal' }}
+                />
+                <Stack.Screen 
+                    name="Exames" 
+                    component={Exames}
+                    options={{ headerShown: false }} 
+                />
+                <Stack.Screen 
+                    name="UploadExame" 
+                    component={UploadExame} 
+                    options={{ 
+                        headerShown: false, 
+                        presentation: 'modal'
                     }}
                 />
-
             </Stack.Navigator>
         </NavigationContainer>
     );

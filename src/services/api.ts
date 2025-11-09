@@ -5,7 +5,7 @@ import axios from 'axios';
 // --- 1. A API REAL ---
 // (Use o seu IP real aqui, como antes)
 const realApi = axios.create({
-  baseURL: 'http://10.0.2.2:3000' // <-- SEU IP REAL DO BACKEND
+  baseURL: 'http://192.168.0.17:3000' // <-- SEU IP REAL DO BACKEND
 });
 
 // --- 2. DADOS FALSOS PARA SUA AMIGA ---
@@ -65,6 +65,14 @@ const fakeApi = {
             }
         }, 400);
      });
+  },
+  delete: (url, config) => {
+    console.warn(`API MOCK (FALSO) CHAMADA: DELETE ${url}`);
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        resolve({ data: { message: "Mock delete success" } });
+      }, 400);
+    });
   }
 };
 
@@ -85,7 +93,10 @@ const api = {
   patch: (url, data, config) => {
     return isMockMode ? fakeApi.patch(url, data, config) : realApi.patch(url, data, config);
   },
-  
+
+  delete: (url, config) => {
+    return isMockMode ? fakeApi.delete(url, config) : realApi.delete(url, config);
+  },
   // Função para LIGAR o modo falso (que o Login.jsx vai chamar)
   enableMockMode: () => {
     console.warn('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!');
@@ -100,6 +111,9 @@ const api = {
   // O 'defaults' que o app real usa para salvar o token
   defaults: realApi.defaults
 };
+
+export const S3_BUCKET_NAME = 'diabeat-files-tcc';
+export const S3_REGION = 'sa-east-1';
 
 // 6. Exportamos o "Proxy"
 export default api;

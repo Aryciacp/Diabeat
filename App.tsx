@@ -122,7 +122,7 @@ function MainAppTabs() {
     );
 }
 
-// --- O Navegador Principal (Stack) ---
+// --- O Navegador Principal (com a prop 'linking') ---
 export default function App() {
     return (
         <NavigationContainer linking={linking}> 
@@ -172,7 +172,7 @@ export default function App() {
 // --- Estilos do Ícone Focado (Sem mudanças) ---
 const styles = StyleSheet.create({
     focusedIconContainer: {
-        backgroundColor: '#2E7D5A', 
+        backgroundColor: '#46A376', 
         width: 44,  
         height: 44, 
         borderRadius: 12, 

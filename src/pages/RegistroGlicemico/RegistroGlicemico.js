@@ -1,7 +1,6 @@
 // Em: src/pages/RegistroGlicemico/RegistroGlicemico.style.js
 
 import { StyleSheet, Dimensions } from 'react-native';
-// Certifique-se que você tem 'COLORS' e 'FONT_SIZE' no seu 'theme.js'
 import { COLORS, FONT_SIZE } from '../../constants/theme'; 
 
 const { width, height } = Dimensions.get('window');
@@ -9,15 +8,13 @@ const { width, height } = Dimensions.get('window');
 export const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: "#46A376", // Fundo verde da tela toda (para o header)
+        backgroundColor: "#46A376", // fundo verde do topo
     },
-    // O ScrollView agora começa no topo
     scrollContainer: {
         flexGrow: 1,
-        justifyContent: 'flex-start', // Alinha o conteúdo ao topo
+        justifyContent: 'flex-start',
         alignItems: 'center',
     },
-    // O cabeçalho verde
     header: {
         width: '100%',
         paddingVertical: 20,
@@ -25,20 +22,20 @@ export const styles = StyleSheet.create({
         justifyContent: 'center',
     },
     headerTitle: {
-        fontSize: FONT_SIZE.lg, // Ajuste se precisar de um tamanho maior
+        fontSize: FONT_SIZE.lg,
         color: COLORS.white,
         fontWeight: 'bold',
     },
-    // A área branca do formulário
+    // área branca agora igual à caixa de observação
     formArea: {
-        flex: 1, // Ocupa o restante do espaço
+        flex: 1,
         width: '100%',
-        backgroundColor: COLORS.white, // Fundo branco do formulário
-        borderTopLeftRadius: 30, // Bordas arredondadas no topo
+        backgroundColor: "#fff", // antes era COLORS.white — agora o mesmo branco puro da observação
+        borderTopLeftRadius: 30,
         borderTopRightRadius: 30,
         paddingHorizontal: 20,
         paddingTop: 30,
-        paddingBottom: 40, // Espaço para não tocar a barra inferior
+        paddingBottom: 40,
     },
     formGroup: {
         marginBottom: 20,
@@ -46,42 +43,39 @@ export const styles = StyleSheet.create({
     },
     label: {
         fontSize: FONT_SIZE.md,
-        color: '#333', // Cor de texto mais escura
+        color: '#333',
         marginBottom: 8,
-        fontWeight: '500', 
+        fontWeight: '500',
     },
-    // Estilo padrão do Input (para Valor)
     input: {
         width: '100%',
-        height: 50, 
-        backgroundColor: COLORS.white,
+        height: 50,
+        backgroundColor: '#fff',
         borderWidth: 1,
-        borderColor: "#ccc", // Borda cinza
+        borderColor: "#ccc",
         borderRadius: 10,
         paddingHorizontal: 15,
         fontSize: FONT_SIZE.md,
         color: '#333',
     },
-    // Estilo para o campo de Data/Hora (para parecer um input)
     inputDate: { 
         width: '100%',
         height: 50,
-        backgroundColor: COLORS.white,
+        backgroundColor: '#fff',
         borderWidth: 1,
         borderColor: "#ccc",
         borderRadius: 10,
         paddingHorizontal: 15,
-        justifyContent: 'center', // Centraliza o texto verticalmente
+        justifyContent: 'center',
     },
     inputDateText: {
         color: '#333',
         fontSize: FONT_SIZE.md,
     },
-    // Estilo para o <Picker> de Contexto
     pickerContainer: { 
         width: '100%',
         height: 50,
-        backgroundColor: COLORS.white,
+        backgroundColor: '#fff',
         borderWidth: 1,
         borderColor: "#ccc",
         borderRadius: 10,
@@ -91,7 +85,6 @@ export const styles = StyleSheet.create({
         width: '100%',
         color: '#333',
     },
-    // Estilo para o campo "Observação" (multi-linha)
     inputNotes: { 
         width: "100%", 
         minHeight: 100, 
@@ -101,9 +94,9 @@ export const styles = StyleSheet.create({
         borderRadius: 10,
         paddingHorizontal: 16,
         paddingVertical: 10, 
-        fontSize: FONT_SIZE.medium,
+        fontSize: FONT_SIZE.md,
         color: "#333",
-        textAlignVertical: 'top', 
+        textAlignVertical: 'top',
     },
     saveButtonContainer: {
         marginTop: 20,
@@ -111,7 +104,7 @@ export const styles = StyleSheet.create({
     },
     cancelButtonText: {
         textAlign: "center",
-        color: '#6c757d', // Cor cinza
+        color: '#6c757d',
         fontSize: FONT_SIZE.md,
         marginTop: 15,
     },

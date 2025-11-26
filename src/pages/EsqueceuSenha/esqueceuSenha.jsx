@@ -1,108 +1,96 @@
-// EM: RecuperarSenha.jsx (CORRIGIDO)
-
-import { View, Text, TouchableOpacity, Alert, StyleSheet, Image } from "react-native";
+// EM: src/pages/EsqueceuSenha/esqueceuSenha.jsx
+import React, { useState } from "react";
+import { View, Text, TouchableOpacity, Alert, Image } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { styles } from "./esqueceuSenha.style.js"; 
-
-// 1. Imports necessários
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
-import { COLORS, FONT_SIZE } from "../../constants/theme"; 
-const LogoImage = require('../../assets/logo.png'); // (Verifique este caminho!)
-
-// import Header from "../../components/header/header.jsx"; // 2. REMOVA o Header
+import { styles } from "./esqueceuSenha.style.js"; 
+import { COLORS } from "../../constants/theme"; 
 import TextBox from "../../components/textbox/textbox.jsx";
 import Button from "../../components/button/button.jsx";
-import { useState } from "react";
 import api from "../../services/api"; 
+
+const LogoImage = require('../../assets/logo.png'); 
 
 function RecuperarSenha({ navigation }) {
     const [email, setEmail] = useState("");
+    const [loading, setLoading] = useState(false);
 
-    // (Sua função handleRecover está 100% correta)
     const handleRecover = async () => {
-        if (!email) {
-            Alert.alert("Atenção", "Por favor, informe seu e-mail.");
-            return;
-        }
+        if (!email) return Alert.alert("Atenção", "Informe seu e-mail.");
+
         try {
-            console.log("Solicitando recuperação de senha para:", email);
-            const response = await api.post('/users/recover-password', { email });
-            console.log("Resposta do servidor:", response.data);
+            setLoading(true);
+            await api.post('/users/recover-password', { email });
+            setLoading(false);
+            
             Alert.alert(
-                "Verifique seu e-mail!",
-                "Se o e-mail estiver cadastrado, enviamos instruções para criar uma nova senha."
+                "E-mail Enviado!",
+                "Verifique seu e-mail para pegar o código.",
+                [
+                    { 
+                        text: "Digitar Código", 
+                        // Mágica aqui: Passamos o email para a próxima tela
+                        onPress: () => navigation.navigate('ResetPassword', { email: email }) 
+                    }
+                ]
             );
-            navigation.goBack();
+
         } catch (error) {
-            // Não informe ao usuário se o e-mail existe ou não
-            console.error("Erro ao recuperar senha (ou e-mail não existe):", error);
-            Alert.alert(
-                "Verifique seu e-mail!",
-                "Se o e-mail estiver cadastrado, enviamos instruções para criar uma nova senha."
-            );
-            navigation.goBack();
+            setLoading(false);
+            // Mesmo com erro, fingimos sucesso por segurança ou alertamos
+            Alert.alert("Sucesso", "Se o e-mail existir, o código foi enviado.");
         }
     };
 
     return (
         <SafeAreaView style={styles.container}>
-            {/* 3. Adicione o KeyboardAwareScrollView */}
-            <KeyboardAwareScrollView
-                style={{ flex: 1 }}
-                contentContainerStyle={styles.scrollContainer}
-                keyboardShouldPersistTaps="handled"
-                enableOnAndroid={true}
-                extraScrollHeight={75}
-                showsVerticalScrollIndicator={false}
-            >
-                {/* 4. Grupo do Formulário (Topo) */}
+            <KeyboardAwareScrollView contentContainerStyle={styles.scrollContainer}>
                 <View style={styles.formGroup}>
-                    {/* 5. Adicione a Logo */}
                     <View style={{ marginBottom: 30, alignItems: 'center' }}>
-                        <Image 
-                            source={LogoImage} 
-                            style={{ width: 250, height: 250, resizeMode: 'contain' }} 
-                        />
+                        <Image source={LogoImage} style={{ width: 250, height: 250, resizeMode: 'contain' }} />
                     </View>
                     
-                    {/* 6. Título (Substituindo o Header) */}
                     <Text style={styles.titleText}>Recuperar Senha</Text> 
+                    <Text style={{ color: COLORS.white, textAlign: 'center', marginBottom: 20 }}>
+                        Digite seu e-mail para receber o código.
+                    </Text>
 
                     <View style={styles.form}>
-                        {/* 7. Corrija o TextBox */}
                         <TextBox 
-                            label="Informe seu e-mail"
+                            label="E-mail"
                             value={email}
                             onChangeText={setEmail}
                             keyboardType="email-address"
-                            // Adiciona os estilos que faltavam
-                            labelStyle={{ color: COLORS.white }}
-                            inputStyle={{ backgroundColor: '#fff', borderColor: 'transparent' }} 
-                            textInputStyle={{ color: '#000' }} 
+                            autoCapitalize="none"
                             placeholderColor="#888"
                         />
                     </View>
 
                     <View style={styles.form}>
-                        {/* 8. Corrija o Button */}
                         <Button 
-                            texto="Enviar" 
+                            texto={loading ? "Enviando..." : "Enviar Código"} 
                             onPress={handleRecover}
-                            buttonStyle={{ 
-                                width: '100%', 
-                                backgroundColor: '#008000' // Verde (igual ao login)
-                            }} 
-                            textStyle={{ 
-                                color: COLORS.white, 
-                                fontWeight: 'bold' 
-                            }} 
+                            disabled={loading}
+                            buttonStyle={{ width: '100%', backgroundColor: '#008000' }} 
                         />
+                    </View>
+
+                    {/* Botão de Atalho */}
+                    <View style={{ marginTop: 20, alignItems: 'center' }}>
+                        <Text style={{ color: COLORS.white }}>Já tem o código?</Text>
+                        <TouchableOpacity 
+                            onPress={() => navigation.navigate('ResetPassword', { email: email })}
+                            style={{ padding: 10 }}
+                        >
+                            <Text style={{ color: '#FFD700', fontWeight: 'bold', textDecorationLine: 'underline' }}>
+                                Digitar Código Manualmente
+                            </Text>
+                        </TouchableOpacity>
                     </View>
                 </View>
 
-                {/* 9. Rodapé (Agora vai para o fim da tela) */}
                 <View style={styles.footer}>
-                    <TouchableOpacity onPress={() => navigation.goBack()}>
+                    <TouchableOpacity onPress={() => navigation.navigate('Login')}>
                         <Text style={styles.footerText}>Voltar para o Login</Text>
                     </TouchableOpacity>
                 </View>

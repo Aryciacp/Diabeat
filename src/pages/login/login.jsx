@@ -1,107 +1,123 @@
-// EM: src/pages/login/login.jsx (CORRIGIDO)
-
-import React, { useState, useEffect } from "react"; // <-- Import 'useEffect'
+import React, { useState, useEffect } from "react";
 import { 
     View, 
     Text, 
     TouchableOpacity, 
     Alert, 
-    StyleSheet,
     Image,
-    Button as BotaoNativo // <-- 'Button' nativo renomeado
+    Button as BotaoNativo
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { styles } from "./login.style";
-import { COLORS, FONT_SIZE } from "../../constants/theme"; 
-const LogoImage = require('../../assets/logo.png'); // (Verifique este caminho!)
+import { COLORS } from "../../constants/theme"; 
+const LogoImage = require('../../assets/logo.png'); 
 
-// Importe a biblioteca do teclado
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
-
-// Imports do Google Auth
 import * as WebBrowser from 'expo-web-browser';
 import * as Google from 'expo-auth-session/providers/google';
 
 import TextBox from "../../components/textbox/textbox.jsx";
-import Button from "../../components/button/button.jsx"; // O seu botão customizado
-import api from "../../services/api"; // Importa a API (mock ou real)
+import Button from "../../components/button/button.jsx"; 
+import api from "../../services/api"; 
 
-// Necessário para o fluxo web do Google Auth
 WebBrowser.maybeCompleteAuthSession();
 
 function Login({ navigation }) {
     const [email, setEmail] = useState("");
     const [senha, setSenha] = useState("");
+    const [loading, setLoading] = useState(false);
 
-    // --- LÓGICA DO GOOGLE SIGN-IN (CORRIGIDA) ---
-    // Deixamos APENAS o 'expoClientId' para forçar o fluxo WEB no Expo Go
+    // --- CONFIGURAÇÃO DO GOOGLE ---
     const [request, response, promptAsync] = Google.useIdTokenAuthRequest({
-        
-        // 1. Deixe APENAS o seu ID de cliente WEB (o que você criou para o Expo Go)
         expoClientId: '476403505993-4rgdk8p9kc15v9kbt70c5gfbg5ojn6if.apps.googleusercontent.com',
         androidClientId: '476403505993-60097qa14u69nu6g8ds7c9b6jm6hlgok.apps.googleusercontent.com',
-        // 2. Mantenha os escopos
         scopes: ['openid', 'profile', 'email'],
-
-        useProxy: true,
-        // 3. (As linhas 'androidClientId' e 'iosClientId' foram REMOVIDAS)
     });
 
-    // Hook que "ouve" a resposta do Google
     useEffect(() => {
         if (response?.type === 'success') {
             const { id_token } = response.params;
-            console.log('ID Token recebido do Google. Verificando no backend...');
             verificarTokenNoBackend(id_token);
         } else if (response?.type === 'error') {
             Alert.alert('Erro no Login Google', response.params.error_description || 'Algo deu errado');
         }
     }, [response]);
 
-    // Função que envia o token do Google para o SEU backend
     const verificarTokenNoBackend = async (token) => {
         try {
+            setLoading(true);
             const backendResponse = await api.post('/auth/google/verify', { token }); 
             const { token: siteToken } = backendResponse.data; 
+            
             api.defaults.headers.common['Authorization'] = `Bearer ${siteToken}`;
-            Alert.alert("Sucesso!", "Login com Google realizado!");
-            navigation.navigate('UserProfile');
+            
+            setLoading(false);
+            navigation.navigate('MainApp'); 
         } catch (error) {
-            console.error('Erro ao verificar token no backend:', error.response?.data || error.message);
-            Alert.alert('Erro no Login', 'Falha ao verificar as credenciais com o servidor.');
+            setLoading(false);
+            console.error('Erro Google Backend:', error.response?.data || error.message);
+            Alert.alert('Erro', 'Falha ao confirmar login com o servidor.');
         }
     };
-    // --- FIM DA LÓGICA DO GOOGLE ---
 
-    // --- (Sua função handleLogin (Mock e Real) ---
+    // --- FUNÇÃO DE VALIDAÇÃO (NOVA) ---
+    const validarFormulario = () => {
+        // 1. Remove espaços em branco antes e depois
+        const emailLimpo = email.trim();
+        const senhaLimpa = senha.trim();
+
+        // 2. Verifica campos vazios
+        if (!emailLimpo || !senhaLimpa) {
+            Alert.alert("Campos Obrigatórios", "Por favor, preencha seu e-mail e senha.");
+            return null;
+        }
+
+        // 3. Validação de Formato de E-mail (Regex Padrão)
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(emailLimpo)) {
+            Alert.alert("E-mail Inválido", "Por favor, insira um endereço de e-mail válido (ex: nome@email.com).");
+            return null;
+        }
+
+        // 4. Validação de Tamanho de Senha (Login)
+        // Para login, validamos apenas se não é absurdamente curta (ex: < 6)
+        if (senhaLimpa.length < 6) {
+            Alert.alert("Senha Curta", "A senha deve ter pelo menos 6 caracteres.");
+            return null;
+        }
+
+        // Retorna os dados limpos se tudo estiver ok
+        return { email: emailLimpo, senha: senhaLimpa };
+    };
+
+    // --- LOGIN TRADICIONAL ---
     const handleLogin = async () => {
-        if (email.toLowerCase() === 'admin@admin.com' && senha === 'admim') {
-          console.log("LOGIN MOCK DE ADMIN DETECTADO!");
-          api.enableMockMode(); 
-          Alert.alert(
-              "Sucesso (Modo Mock)!", 
-              "Logado como Admin de Frontend. A API real está desligada.",
-              [{ text: "OK", onPress: () => navigation.navigate('UserProfile') }] 
-          );
-          return; 
-        }
+        // Chama a validação antes de qualquer coisa
+        const dadosValidos = validarFormulario();
         
-        if (!email || !senha) {
-            Alert.alert("Atenção", "Por favor, preencha e-mail e senha.");
-            return;
-        }
+        // Se a validação falhou (retornou null), para aqui.
+        if (!dadosValidos) return;
 
         try {
-            const response = await api.post('/users/login', { email, password: senha });
+            setLoading(true);
+            
+            // Envia os dados já "limpos" (sem espaços)
+            const response = await api.post('/users/login', { 
+                email: dadosValidos.email, 
+                password: dadosValidos.senha 
+            });
+            
             const { token } = response.data;
+
             api.defaults.headers.common['Authorization'] = `Bearer ${token}`; 
-            Alert.alert(
-            "Sucesso!", 
-            "Login realizado com sucesso!",
-            [{ text: "OK", onPress: () => navigation.navigate('MainApp') }] 
-        );
+            
+            setLoading(false);
+            navigation.navigate('MainApp');
+
         } catch (error) {
-            // ... (seu catch de erro de login)
+            setLoading(false);
+            const msg = error.response?.data?.error || "Ocorreu um erro ao fazer login.";
+            Alert.alert("Erro de Acesso", msg);
         }
     };
     
@@ -121,7 +137,6 @@ function Login({ navigation }) {
             >
                 
                 <View style={styles.formGroup}>
-                    {/* Logo */}
                     <View style={{marginTop: -100, marginBottom: -30, alignItems: 'center' }}>
                         <Image 
                             source={LogoImage} 
@@ -135,12 +150,14 @@ function Login({ navigation }) {
                         <TextBox 
                             label="E-mail"
                             value={email}
-                            onChangeText={setEmail}
-                            // ... (outras props)
+                            onChangeText={setEmail} // Mantemos o state "sujo" enquanto digita, limpamos no submit
                             labelStyle={{ color: COLORS.white }}
                             inputStyle={{ backgroundColor: '#fff', borderColor: 'transparent' }} 
                             textInputStyle={{ color: '#000' }} 
                             placeholderColor="#888"
+                            autoCapitalize="none" 
+                            keyboardType="email-address"
+                            autoCorrect={false} // Evita corretor mudando o email
                         />
                     </View>
 
@@ -159,16 +176,15 @@ function Login({ navigation }) {
 
                     <View style={styles.form}>
                         <Button 
-                            texto="Login" 
+                            texto={loading ? "Carregando..." : "Login"} 
                             onPress={handleLogin} 
-                            // ... (styles do botão)
+                            disabled={loading} 
                         />
                     </View>
 
-                    {/* Botão do Google */}
                     <View style={styles.form}>
                         <BotaoNativo 
-                            disabled={!request} 
+                            disabled={!request || loading} 
                             title="Entrar com Google"
                             onPress={() => {
                               promptAsync(); 
@@ -184,7 +200,6 @@ function Login({ navigation }) {
                     </View>
                 </View>
 
-                {/* Rodapé */}
                 <View style={styles.footer}>
                     <TouchableOpacity onPress={() => navigation.navigate('Registro')}>
                         <Text style={styles.footerText}>Ou se Cadastre</Text>

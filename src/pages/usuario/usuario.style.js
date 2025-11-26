@@ -130,4 +130,16 @@ export const styles = {
     passwordButton: {
         backgroundColor: '#6c757d', // Cor cinza
     },
+    deleteButton: {
+        backgroundColor: '#FFEBEE', // Fundo vermelho bem claro
+        borderWidth: 1,
+        borderColor: '#FFCDD2',
+        marginTop: 30,
+        marginBottom: 20,
+    },
+    deleteButtonText: {
+        color: '#D32F2F', // Texto vermelho escuro
+        fontSize: FONT_SIZE.md,
+        fontWeight: "bold",
+    }
 };

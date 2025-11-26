@@ -1,7 +1,4 @@
-// Em: App.js (COMPLETO E RESPONSIVO)
-
 import React from 'react';
-// 1. IMPORTE 'Dimensions'
 import { View, StyleSheet, Dimensions } from 'react-native'; 
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
@@ -19,101 +16,119 @@ import Glicemia from './src/pages/Glicemia/Glicemia.jsx';
 import RegistroGlicemico from './src/pages/RegistroGlicemico/RegistroGlicemico.jsx';
 import Exames from './src/pages/Exames/Exames.jsx';
 import UploadExame from './src/pages/UploadExame/UploadExame.jsx';
+import DeletarConta from './src/pages/DeletarConta/DeletarConta.jsx';
+import HistoricoGlicemia from './src/pages/HistoricoGlicemia/HistoricoGlicemia.jsx';
 
+// --- NOVAS TELAS DE RECEITAS ---
+import ReceitasLista from './src/pages/ReceitasLista/ReceitasLista.jsx';
+import ReceitaDetalhe from './src/pages/ReceitaDetalhe/ReceitaDetalhe.jsx';
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
-
-// 2. PEGUE A LARGURA DA TELA
-const { width } = Dimensions.get('window');
+const ReceitasStack = createNativeStackNavigator(); // <--- Criei um stack só para receitas
 
 // --- Configuração de Linking (Deep Link) ---
 const linking = {
   prefixes: ['diabeat://'],
   config: {
     screens: {
-      ResetPassword: 'reset-password', 
+      ResetPassword: 'reset-password',
+      DeletarConta: 'delete-account', 
     }
   }
 };
 
-// --- (Função 'MainAppTabs' - COM A CORREÇÃO) ---
+// --- 1. O Stack Navigator das Receitas ---
+function ReceitasStackNavigator() {
+    return (
+        <ReceitasStack.Navigator screenOptions={{ headerShown: false }}>
+            <ReceitasStack.Screen name="ReceitasLista" component={ReceitasLista} />
+            <ReceitasStack.Screen name="ReceitaDetalhe" component={ReceitaDetalhe} />
+        </ReceitasStack.Navigator>
+    );
+}
+
+// --- Função 'MainAppTabs' ---
 function MainAppTabs() {
     return (
         <Tab.Navigator
             screenOptions={({ route }) => ({
-                headerShown: false, 
+                headerShown: false,
                 tabBarShowLabel: false,
                 tabBarInactiveTintColor: '#BDBDBD',
                 
-                // --- 3. ESTILO DA BARRA CORRIGIDO ---
+                // --- CONFIGURAÇÃO DA BARRA ---
                 tabBarStyle: {
-                    position: 'absolute',   // Continua flutuante
-                    bottom: 35,             // Distância do fundo
-                    
-                    // --- MUDANÇAS AQUI ---
-                    // Removemos 'left' e 'right'
-                    // Adicionamos uma largura responsiva e centralizamos
-                    width: width * 0.6,     // Ex: 70% da largura da tela
-                    maxWidth: 400,          // Limite máximo para telas muito grandes
-                    alignSelf: 'center',    // Centraliza a barra
-                    // --- FIM DAS MUDANÇAS ---
-
+                    position: 'absolute',
+                    bottom: 40, 
+                    width: '100%', 
+                    alignSelf: 'center',
                     backgroundColor: '#FFFFFF',
-                    borderRadius: 20,       
-                    height: 70,             
-                    elevation: 5,
-                    shadowColor: '#000',
-                    shadowOffset: { width: 0, height: 2 },
-                    shadowOpacity: 0.1,
-                    shadowRadius: 4,
+                    borderRadius: 50, 
+                    height: 65, 
+                    paddingBottom: 0, 
+                    paddingTop: 0,
+                    borderTopWidth: 0,
+                    ...styles.shadow, 
+                },
+                tabBarItemStyle: {
+                    height: 65, 
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    padding: 10, 
+                },
+                tabBarIconStyle: {
+                    marginTop: 0,
                 }
             })}
         >
-            {/* Aba 1: Perfil (Ícone de Casa) */}
+            {/* Aba 1: Perfil */}
             <Tab.Screen
                 name="Perfil"
                 component={UserProfile}
                 options={{
-                    tabBarIcon: ({ color, size, focused }) => (
+                    tabBarIcon: ({ color, focused }) => (
                         focused ? (
                             <View style={styles.focusedIconContainer}>
-                                <FontAwesome name="home" size={size} color="#FFFFFF" />
+                                <FontAwesome name="home" size={22} color="#FFFFFF" />
                             </View>
                         ) : (
-                            <FontAwesome name="home" size={size} color={color} />
+                            <FontAwesome name="home" size={26} color={color} />
                         )
                     ),
                 }}
             />
-            {/* Aba 2: Glicemia (Ícone de Chat) */}
+
+            {/* Aba 2: Glicemia */}
             <Tab.Screen
                 name="Glicemia"
                 component={Glicemia}
                 options={{
-                    tabBarIcon: ({ color, size, focused }) => (
+                    tabBarIcon: ({ color, focused }) => (
                         focused ? (
                             <View style={styles.focusedIconContainer}>
-                                <FontAwesome name="comment" size={size} color="#FFFFFF" />
+                                <FontAwesome name="comment" size={22} color="#FFFFFF" />
                             </View>
                         ) : (
-                            <FontAwesome name="comment" size={size} color={color} />
+                            <FontAwesome name="comment" size={26} color={color} />
                         )
                     ),
                 }}
             />
-            {/* Aba 3: Xícara (Exemplo) */}
+
+            {/* Aba 3: RECEITAS (Atualizado) */}
             <Tab.Screen
-                name="Refeicoes"
-                component={Glicemia} // Placeholder
+                name="ReceitasTab" // Nome da rota da aba
+                component={ReceitasStackNavigator} // <--- Chama o Stack aqui!
                 options={{
-                    tabBarIcon: ({ color, size, focused }) => (
+                    tabBarIcon: ({ color, focused }) => (
                         focused ? (
                             <View style={styles.focusedIconContainer}>
-                                <FontAwesome name="coffee" size={size} color="#FFFFFF" />
+                                {/* Troquei o ícone para 'cutlery' (talheres) ou 'book' */}
+                                <FontAwesome name="cutlery" size={20} color="#FFFFFF" />
                             </View>
                         ) : (
-                            <FontAwesome name="coffee" size={size} color={color} />
+                            <FontAwesome name="cutlery" size={26} color={color} />
                         )
                     ),
                 }}
@@ -122,7 +137,7 @@ function MainAppTabs() {
     );
 }
 
-// --- O Navegador Principal (com a prop 'linking') ---
+// --- O Navegador Principal ---
 export default function App() {
     return (
         <NavigationContainer linking={linking}> 
@@ -132,20 +147,22 @@ export default function App() {
                     headerShown: false, 
                 }}
             >
-                {/* Telas ANTES do Login */}
+                {/* Telas de Autenticação */}
                 <Stack.Screen name="Login" component={Login} />
                 <Stack.Screen name="Registro" component={Registro} />
                 <Stack.Screen name="RecuperarSenha" component={RecuperarSenha} />
                 <Stack.Screen name="ResetPassword" component={ResetPassword} />
-                <Stack.Screen name="MudarSenha" component={MudarSenha} />
                 
-                {/* Tela DEPOIS do Login (que contém TODAS as abas) */}
+                {/* Tela Principal (Abas) */}
                 <Stack.Screen 
                     name="MainApp"
                     component={MainAppTabs} 
                 />
 
-                {/* Telas "Modais" (que abrem por cima das abas) */}
+                {/* Telas Internas / Modais */}
+                <Stack.Screen name="MudarSenha" component={MudarSenha} />
+                <Stack.Screen name="DeletarConta" component={DeletarConta} />
+                
                 <Stack.Screen 
                     name="RegistroGlicemico"
                     component={RegistroGlicemico}
@@ -154,34 +171,42 @@ export default function App() {
                 <Stack.Screen 
                     name="Exames" 
                     component={Exames}
-                    options={{ headerShown: false }} 
                 />
                 <Stack.Screen 
                     name="UploadExame" 
                     component={UploadExame} 
-                    options={{ 
-                        headerShown: false, 
-                        presentation: 'modal'
-                    }}
+                    options={{ presentation: 'modal' }}
                 />
+                <Stack.Screen name="HistoricoGlicemia" component={HistoricoGlicemia} />
+
             </Stack.Navigator>
         </NavigationContainer>
     );
 }
 
-// --- Estilos do Ícone Focado (Sem mudanças) ---
+// --- Estilos do Ícone Focado ---
 const styles = StyleSheet.create({
     focusedIconContainer: {
-        backgroundColor: '#46A376', 
-        width: 44,  
-        height: 44, 
-        borderRadius: 12, 
+        backgroundColor: '#46A376', // <--- Atualizei para o verde correto da marca!
+        width: 40,  
+        height: 40, 
+        borderRadius: 20, 
         justifyContent: 'center', 
         alignItems: 'center',   
         elevation: 3, 
         shadowColor: '#000',
         shadowOffset: { width: 0, height: 1 },
         shadowOpacity: 0.2,
-        shadowRadius: 2,
+        shadowRadius: 1,
+    },
+    shadow: {
+        elevation: 3, 
+        shadowColor: '#000', 
+        shadowOffset: {
+            width: 0,
+            height: 1,
+        },
+        shadowOpacity: 0.15,
+        shadowRadius: 1,
     }
 });

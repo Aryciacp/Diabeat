@@ -1,52 +1,61 @@
-// Em: src/pages/UploadExame/uploadExame.style.js (ARQUIVO NOVO)
-import { StyleSheet, Dimensions } from 'react-native';
-import { COLORS, FONT_SIZE } from '../../constants/theme';
-
-const { width } = Dimensions.get('window');
+import { StyleSheet } from "react-native";
 
 export const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#FFF',
+        backgroundColor: '#46A376', // Verde da Marca
     },
     header: {
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
         paddingHorizontal: 20,
-        paddingVertical: 15,
-        backgroundColor: '#FFF',
-        borderBottomWidth: 1,
-        borderBottomColor: '#EEE',
+        paddingVertical: 20,
     },
     headerTitle: {
-        fontSize: FONT_SIZE.lg,
+        fontSize: 20,
         fontWeight: 'bold',
-        color: '#333',
+        color: '#fff',
     },
-    scrollContainer: {
-        padding: 20,
+    // Card Branco (Efeito Folha)
+    formArea: {
+        flex: 1,
+        backgroundColor: '#fff',
+        borderTopLeftRadius: 30,
+        borderTopRightRadius: 30,
+        paddingHorizontal: 25,
+        paddingTop: 30,
     },
     formGroup: {
         marginBottom: 20,
-        width: '100%',
     },
     label: {
-        fontSize: FONT_SIZE.md,
+        fontSize: 16,
         color: '#333',
-        fontWeight: '500',
+        fontWeight: 'bold',
         marginBottom: 8,
+        marginLeft: 5,
     },
     input: {
-        width: '100%',
-        height: 50, 
-        backgroundColor: '#F9F9F9',
-        borderWidth: 1,
-        borderColor: "#EEE",
+        backgroundColor: '#f9f9f9',
         borderRadius: 10,
-        paddingHorizontal: 15,
-        fontSize: FONT_SIZE.md,
+        padding: 15,
+        fontSize: 16,
         color: '#333',
-        justifyContent: 'center',
+        borderWidth: 1,
+        borderColor: '#eee',
     },
+    inputDate: {
+        backgroundColor: '#f9f9f9',
+        borderRadius: 10,
+        padding: 15,
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        borderWidth: 1,
+        borderColor: '#eee',
+    },
+    scrollContainer: {
+        paddingBottom: 40
+    }
 });

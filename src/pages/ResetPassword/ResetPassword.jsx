@@ -1,123 +1,121 @@
-// EM: src/pages/ResetPassword/ResetPassword.jsx (COMPLETO E NOVO)
-
+// EM: src/pages/ResetPassword/ResetPassword.jsx
 import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, Alert, Image } from 'react-native';
+import { View, Text, Alert, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-// (Vamos reusar o estilo do 'RecuperarSenha', que é idêntico)
-import { styles } from '../EsqueceuSenha/esqueceuSenha.style.js'; 
+import { styles } from '../ResetPassword/resetPassword.style.js'; 
 import { COLORS } from '../../constants/theme';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import api from '../../services/api';
 import TextBox from '../../components/textbox/textbox.jsx';
 import Button from '../../components/button/button.jsx';
 
-// (Ajuste o caminho da logo se estiver incorreto)
 const LogoImage = require('../../assets/logo.png'); 
 
-// 1. Receba 'route' para pegar os parâmetros do link
 export default function ResetPassword({ navigation, route }) {
     
-    // 2. O token vem da ROTA (do deep link)
-    const [token, setToken] = useState(null);
+    // Pega dados vindos da navegação ou link
+    const paramsToken = route.params?.token;
+    const paramsEmail = route.params?.email;
+
+    const [token, setToken] = useState(""); 
+    const [email, setEmail] = useState(""); 
     const [novaSenha, setNovaSenha] = useState("");
     const [confirmarSenha, setConfirmarSenha] = useState("");
+    const [loading, setLoading] = useState(false);
 
-    // 3. Pega o token da rota quando a tela abre
     useEffect(() => {
-        if (route.params?.token) {
-            setToken(route.params.token);
-            console.log("Token recebido do deep link:", route.params.token);
-        } else {
-            // Isso pode acontecer se o usuário tentar navegar para cá manualmente
-            Alert.alert("Erro", "Token de redefinição não encontrado ou inválido.");
-            navigation.navigate('Login');
-        }
-    }, [route.params]);
+        if (paramsToken) setToken(paramsToken);
+        if (paramsEmail) setEmail(paramsEmail);
+    }, [paramsToken, paramsEmail]);
 
     const handleReset = async () => {
-        if (!novaSenha || !confirmarSenha) {
-            Alert.alert("Erro", "Por favor, preencha os campos de senha.");
-            return;
-        }
-        if (novaSenha !== confirmarSenha) {
-            Alert.alert("Erro", "As senhas não coincidem.");
-            return;
-        }
-        if (!token) {
-            Alert.alert("Erro", "Token não encontrado. Tente novamente.");
-            return;
-        }
+        if (!email) return Alert.alert("Erro", "E-mail obrigatório.");
+        if (!token) return Alert.alert("Erro", "Código obrigatório.");
+        if (!novaSenha || !confirmarSenha) return Alert.alert("Erro", "Preencha as senhas.");
+        if (novaSenha !== confirmarSenha) return Alert.alert("Erro", "Senhas não coincidem.");
 
         try {
-            // 4. Envia o token (do estado) e a nova senha
-            const response = await api.post('/users/reset-password', {
+            setLoading(true);
+            
+            // Envia tudo para o backend validar
+            await api.post('/users/reset-password', {
+                email: email, 
                 token: token,
                 newPassword: novaSenha
             });
 
-            Alert.alert(
-                "Sucesso!",
-                "Sua senha foi redefinida com sucesso. Você já pode fazer o login.",
-                [{ text: "OK", onPress: () => navigation.navigate('Login') }]
-            );
+            setLoading(false);
+            Alert.alert("Sucesso!", "Senha alterada.", [{ text: "Login", onPress: () => navigation.navigate('Login') }]);
 
         } catch (error) {
-            const errorMessage = error.response?.data?.error || "Token inválido ou expirado. Tente novamente.";
-            Alert.alert("Erro ao Redefinir", errorMessage);
+            setLoading(false);
+            const msg = error.response?.data?.error || "Erro ao resetar.";
+            Alert.alert("Erro", msg);
         }
     };
 
     return (
         <SafeAreaView style={styles.container}>
-            <KeyboardAwareScrollView
-                contentContainerStyle={styles.scrollContainer}
-                keyboardShouldPersistTaps="handled"
-            >
+            <KeyboardAwareScrollView contentContainerStyle={styles.scrollContainer}>
                 <View style={styles.formGroup}>
-                    <View style={{ marginBottom: 30, alignItems: 'center' }}>
-                        <Image 
-                            source={LogoImage} 
-                            style={{ width: 150, height: 150, resizeMode: 'contain' }} 
-                        />
+                    <View style={{ marginBottom: 20, alignItems: 'center' }}>
+                        <Image source={LogoImage} style={{ width: 120, height: 120, resizeMode: 'contain' }} />
                     </View>
                     
-                    <Text style={styles.titleText}>Criar Nova Senha</Text> 
+                    <Text style={styles.titleText}>Nova Senha</Text> 
 
                     <View style={styles.form}>
+                        <Text style={{color: COLORS.white, marginBottom: 5}}>E-mail</Text>
                         <TextBox 
-                            label="Nova Senha"
+                            value={email}
+                            onChangeText={setEmail}
+                            placeholder="Confirme seu e-mail"
+                            editable={!paramsEmail} // Trava se já veio preenchido
+                            inputStyle={{ backgroundColor: paramsEmail ? '#e0e0e0' : '#fff' }}
+                        />
+                    </View>
+
+                    <View style={styles.form}>
+                        <Text style={{color: COLORS.white, marginBottom: 5}}>Código (6 números)</Text>
+                        <TextBox 
+                            value={token}
+                            onChangeText={setToken}
+                            placeholder="Ex: 123456"
+                            keyboardType="numeric"
+                            maxLength={6}
+                            inputStyle={{ backgroundColor: '#fff' }}
+                        />
+                    </View>
+
+                    <View style={styles.form}>
+                        <Text style={{color: COLORS.white, marginBottom: 5}}>Nova Senha</Text>
+                        <TextBox 
                             value={novaSenha}
                             onChangeText={setNovaSenha}
                             isPassword={true}
-                            labelStyle={{ color: COLORS.white }}
-                            inputStyle={{ backgroundColor: '#fff', borderColor: 'transparent' }} 
+                            inputStyle={{ backgroundColor: '#fff' }}
                         />
                     </View>
 
                     <View style={styles.form}>
+                         <Text style={{color: COLORS.white, marginBottom: 5}}>Confirmar Senha</Text>
                         <TextBox 
-                            label="Confirmar Nova Senha"
                             value={confirmarSenha}
                             onChangeText={setConfirmarSenha}
                             isPassword={true}
-                            labelStyle={{ color: COLORS.white }}
-                            inputStyle={{ backgroundColor: '#fff', borderColor: 'transparent' }} 
+                            inputStyle={{ backgroundColor: '#fff' }}
                         />
                     </View>
 
                     <View style={styles.form}>
                         <Button 
-                            texto="Salvar Nova Senha" 
+                            texto={loading ? "Salvando..." : "Alterar Senha"} 
                             onPress={handleReset}
-                            buttonStyle={{ width: '100%', backgroundColor: '#008000' }} 
-                            textStyle={{ color: COLORS.white, fontWeight: 'bold' }} 
+                            disabled={loading}
+                            buttonStyle={{ backgroundColor: '#008000' }} 
                         />
                     </View>
                 </View>
-
-                {/* Rodapé vazio */}
-                <View style={styles.footer} />
-
             </KeyboardAwareScrollView>
         </SafeAreaView>
     );

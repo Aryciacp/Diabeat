@@ -1,111 +1,96 @@
-// Em: src/pages/RegistroGlicemico/RegistroGlicemico.style.js
-
-import { StyleSheet, Dimensions } from 'react-native';
-import { COLORS, FONT_SIZE } from '../../constants/theme'; 
-
-const { width, height } = Dimensions.get('window');
+import { StyleSheet } from "react-native";
 
 export const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: "#46A376", // fundo verde do topo
-    },
-    scrollContainer: {
-        flexGrow: 1,
-        justifyContent: 'flex-start',
-        alignItems: 'center',
+        backgroundColor: '#46A376', // Verde da marca
     },
     header: {
-        width: '100%',
-        paddingVertical: 20,
+        flexDirection: 'row',
         alignItems: 'center',
-        justifyContent: 'center',
+        paddingHorizontal: 20,
+        paddingVertical: 20,
+    },
+    backButton: {
+        marginRight: 15,
     },
     headerTitle: {
-        fontSize: FONT_SIZE.lg,
-        color: COLORS.white,
+        fontSize: 22,
         fontWeight: 'bold',
+        color: '#fff',
     },
-    // área branca agora igual à caixa de observação
+    // A mágica do "Card Branco" que sobe
     formArea: {
         flex: 1,
-        width: '100%',
-        backgroundColor: "#fff", // antes era COLORS.white — agora o mesmo branco puro da observação
+        backgroundColor: '#fff',
         borderTopLeftRadius: 30,
         borderTopRightRadius: 30,
-        paddingHorizontal: 20,
+        paddingHorizontal: 25,
         paddingTop: 30,
-        paddingBottom: 40,
     },
     formGroup: {
         marginBottom: 20,
-        width: '100%',
     },
     label: {
-        fontSize: FONT_SIZE.md,
+        fontSize: 16,
         color: '#333',
+        fontWeight: 'bold',
         marginBottom: 8,
-        fontWeight: '500',
+        marginLeft: 5,
     },
     input: {
-        width: '100%',
-        height: 50,
-        backgroundColor: '#fff',
-        borderWidth: 1,
-        borderColor: "#ccc",
+        backgroundColor: '#f9f9f9',
         borderRadius: 10,
-        paddingHorizontal: 15,
-        fontSize: FONT_SIZE.md,
+        padding: 15,
+        fontSize: 16,
         color: '#333',
-    },
-    inputDate: { 
-        width: '100%',
-        height: 50,
-        backgroundColor: '#fff',
         borderWidth: 1,
-        borderColor: "#ccc",
+        borderColor: '#eee',
+    },
+    inputDate: {
+        backgroundColor: '#f9f9f9',
         borderRadius: 10,
-        paddingHorizontal: 15,
-        justifyContent: 'center',
+        padding: 15,
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        borderWidth: 1,
+        borderColor: '#eee',
     },
     inputDateText: {
+        fontSize: 16,
         color: '#333',
-        fontSize: FONT_SIZE.md,
     },
-    pickerContainer: { 
-        width: '100%',
-        height: 50,
-        backgroundColor: '#fff',
-        borderWidth: 1,
-        borderColor: "#ccc",
+    pickerContainer: {
+        backgroundColor: '#f9f9f9',
         borderRadius: 10,
-        justifyContent: "center",
+        borderWidth: 1,
+        borderColor: '#eee',
+        // Ajustes para o Picker no Android ficar bonito
+        overflow: 'hidden',
     },
     picker: {
         width: '100%',
         color: '#333',
     },
-    inputNotes: { 
-        width: "100%", 
-        minHeight: 100, 
-        backgroundColor: "#fff",
-        borderWidth: 1,
-        borderColor: "#ccc",
+    inputNotes: {
+        backgroundColor: '#f9f9f9',
         borderRadius: 10,
-        paddingHorizontal: 16,
-        paddingVertical: 10, 
-        fontSize: FONT_SIZE.md,
-        color: "#333",
-        textAlignVertical: 'top',
+        padding: 15,
+        fontSize: 16,
+        color: '#333',
+        borderWidth: 1,
+        borderColor: '#eee',
+        textAlignVertical: 'top', // Para o texto começar em cima no multiline
+        height: 100,
     },
     saveButtonContainer: {
         marginTop: 20,
-        width: '100%',
     },
     cancelButtonText: {
-        textAlign: "center",
-        color: '#6c757d',
-        fontSize: FONT_SIZE.md,
-        marginTop: 15,
-    },
+        textAlign: 'center',
+        color: '#999',
+        fontSize: 16,
+        marginBottom: 20,
+    }
 });

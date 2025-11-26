@@ -1,49 +1,46 @@
-// Em: src/pages/UploadExame/UploadExame.jsx (ARQUIVO NOVO)
+// ARQUIVO: src/pages/UploadExame/UploadExame.jsx
 
 import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, Alert, TextInput, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { styles } from './uploadExame.style'; // (Vamos criar este estilo)
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
-import api from '../../services/api';
-import Button from '../../components/button/button.jsx';
-import TextBox from '../../components/textbox/textbox.jsx';
 import * as DocumentPicker from 'expo-document-picker';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { FontAwesome } from '@expo/vector-icons';
+
+import api from '../../services/api';
+import Button from '../../components/button/button.jsx';
+// Importando o estilo
+import { styles } from './uploadExame.style.js'; 
 
 export default function UploadExame({ navigation }) {
     const [examName, setExamName] = useState("");
     const [examType, setExamType] = useState("");
     const [date, setDate] = useState(new Date());
-    const [file, setFile] = useState(null); // Guarda o arquivo selecionado
+    const [file, setFile] = useState(null); 
     const [isUploading, setIsUploading] = useState(false);
 
-    // --- Funções do DatePicker ---
     const [showPicker, setShowPicker] = useState(false);
     const onDateChange = (event, selectedDate) => {
         setShowPicker(false);
         if (selectedDate) setDate(selectedDate);
     };
     const formatDate = (date) => date.toLocaleDateString('pt-BR');
-    // --- Fim do DatePicker ---
 
-    // --- Função para Escolher o Arquivo ---
     const pickDocument = async () => {
         try {
             const result = await DocumentPicker.getDocumentAsync({
-                type: ['application/pdf', 'image/jpeg', 'image/png'], // Aceita PDF e Imagens
+                type: ['application/pdf', 'image/jpeg', 'image/png'], 
             });
             
-            if (result.canceled === false && result.assets && result.assets.length > 0) {
-                setFile(result.assets[0]); // Salva o primeiro arquivo selecionado
+            if (!result.canceled && result.assets && result.assets.length > 0) {
+                setFile(result.assets[0]); 
             }
         } catch (error) {
             Alert.alert("Erro", "Não foi possível selecionar o arquivo.");
         }
     };
 
-    // --- Função de Upload ---
     const handleUpload = async () => {
         if (!file || !examName || !examType) {
             Alert.alert("Erro", "Por favor, preencha todos os campos e selecione um arquivo.");
@@ -52,26 +49,23 @@ export default function UploadExame({ navigation }) {
 
         setIsUploading(true);
 
-        // 1. Precisamos usar 'FormData' para enviar arquivos
         const formData = new FormData();
-        
-        // 2. Adiciona os dados de texto
         formData.append('examName', examName);
         formData.append('examType', examType);
         formData.append('examDate', date.toISOString());
 
-        // 3. Adiciona o arquivo (O NOME 'examFile' TEM QUE BATER com o backend)
-        formData.append('examFile', {
+        // ⚠️ CORREÇÃO CRÍTICA: O nome do campo deve ser 'file' para bater com upload.single('file') no backend
+        formData.append('file', {
             uri: file.uri,
             name: file.name,
-            type: file.mimeType,
+            type: file.mimeType || 'application/pdf', // Garante um tipo se vier vazio
         });
 
         try {
-            // 4. Envia o FormData para a API
+            // A rota correta é /users/exams (conforme seu backend)
             await api.post('/users/exams', formData, {
                 headers: {
-                    'Content-Type': 'multipart/form-data', // Essencial para o backend (multer)
+                    'Content-Type': 'multipart/form-data', 
                 },
             });
 
@@ -91,13 +85,16 @@ export default function UploadExame({ navigation }) {
         <SafeAreaView style={styles.container}>
             <View style={styles.header}>
                 <TouchableOpacity onPress={() => navigation.goBack()}>
-                    <FontAwesome name="chevron-left" size={24} color="#46A376" />
+                    <FontAwesome name="chevron-left" size={24} color="#fff" />
                 </TouchableOpacity>
                 <Text style={styles.headerTitle}>Adicionar Exame</Text>
                 <View style={{ width: 24 }} /> 
             </View>
 
-            <KeyboardAwareScrollView contentContainerStyle={styles.scrollContainer}>
+            <KeyboardAwareScrollView 
+                style={styles.formArea}
+                contentContainerStyle={{paddingBottom: 40}}
+            >
                 
                 <View style={styles.formGroup}>
                     <Text style={styles.label}>Nome do Exame</Text>
@@ -106,6 +103,7 @@ export default function UploadExame({ navigation }) {
                         value={examName}
                         onChangeText={setExamName}
                         placeholder="Ex: Hemoglobina Glicada"
+                        placeholderTextColor="#ccc"
                     />
                 </View>
 
@@ -115,14 +113,16 @@ export default function UploadExame({ navigation }) {
                         style={styles.input}
                         value={examType}
                         onChangeText={setExamType}
-                        placeholder="Ex: Exame de Sangue"
+                        placeholder="Ex: Sangue"
+                        placeholderTextColor="#ccc"
                     />
                 </View>
 
                 <View style={styles.formGroup}>
                     <Text style={styles.label}>Data do Exame</Text>
-                    <TouchableOpacity style={styles.input} onPress={() => setShowPicker(true)}>
+                    <TouchableOpacity style={styles.inputDate} onPress={() => setShowPicker(true)}>
                         <Text style={{color: '#333'}}>{formatDate(date)}</Text>
+                        <FontAwesome name="calendar" size={20} color="#46A376" />
                     </TouchableOpacity>
                 </View>
 
@@ -138,10 +138,14 @@ export default function UploadExame({ navigation }) {
                 <View style={styles.formGroup}>
                     <Text style={styles.label}>Arquivo (PDF ou Imagem)</Text>
                     <Button
-                        texto={file ? `Arquivo: ${file.name.substring(0, 20)}...` : "Selecionar Arquivo"}
+                        texto={file ? `Arquivo Selecionado: ${file.name.substring(0, 15)}...` : "Selecionar Arquivo"}
                         onPress={pickDocument}
-                        buttonStyle={{ backgroundColor: file ? '#E8F5E9' : '#DDD' }}
-                        textStyle={{ color: file ? '#46A376' : '#555' }}
+                        buttonStyle={{ 
+                            backgroundColor: file ? '#E8F5E9' : '#f0f0f0', 
+                            borderWidth: 1, 
+                            borderColor: file ? '#46A376' : '#ccc' 
+                        }}
+                        textStyle={{ color: file ? '#46A376' : '#666' }}
                     />
                 </View>
 

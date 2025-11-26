@@ -1,40 +1,38 @@
-// Em: src/pages/RegistroGlicemico/RegistroGlicemico.jsx
+// ARQUIVO: src/pages/RegistroGlicemico/RegistroGlicemico.jsx
 
 import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, Alert, TextInput, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-// 1. CORRIGIDO: Importação correta do arquivo de estilo
-import { styles } from './RegistroGlicemico'; 
-import { Picker } from '@react-native-picker/picker';
-import Button from '../../components/button/button.jsx'; 
-import api from '../../services/api';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
-// 2. Importe o DatePicker e o FontAwesome
 import DateTimePicker from '@react-native-community/datetimepicker'; 
 import { FontAwesome } from '@expo/vector-icons'; 
+import { Picker } from '@react-native-picker/picker';
+
+import Button from '../../components/button/button.jsx'; 
+import api from '../../services/api';
+
+// Importando o estilo (certifique-se de criar o arquivo abaixo)
+import { styles } from './RegistroGlicemico.js'; 
 
 export default function RegistroGlicemico({ navigation }) {
     const [value, setValue] = useState("");
     const [type, setType] = useState("JEJUM");
     const [notes, setNotes] = useState("");
     
-    // 3. Estados para Data e Hora
-    const [date, setDate] = useState(new Date()); // Começa com a data/hora atual
-    const [showPicker, setShowPicker] = useState(false); // Controla data E hora
-    const [mode, setMode] = useState('date'); // Controla se é 'date' ou 'time'
+    // Estados para Data e Hora
+    const [date, setDate] = useState(new Date()); 
+    const [showPicker, setShowPicker] = useState(false); 
+    const [mode, setMode] = useState('date'); 
 
-    // 4. Função chamada pelo DateTimePicker
     const onDateTimeChange = (event, selectedDate) => {
-        setShowPicker(false); // Fecha o picker
+        setShowPicker(false); 
         if (selectedDate) {
-            // Se o usuário selecionou uma data,
-            // e o modo era 'date', abre o seletor de 'time'
             if (mode === 'date') {
                 setDate(selectedDate);
-                setMode('time'); // Prepara para abrir o de hora
-                setShowPicker(true); // Abre o de hora
+                setMode('time'); // Depois de escolher a data, pede a hora
+                // Pequeno timeout para garantir que o primeiro picker feche antes de abrir o segundo no Android
+                setTimeout(() => setShowPicker(true), 100); 
             } else {
-                // Se o modo era 'time', salva a hora
                 setDate(selectedDate);
             }
         }
@@ -47,11 +45,12 @@ export default function RegistroGlicemico({ navigation }) {
         }
 
         try {
-            await api.post('/users/glicemia', {
+            // ⚠️ CORREÇÃO AQUI: A rota no backend é '/users/glucose'
+            await api.post('/users/glucose', {
                 value: parseInt(value),
-                type: type, // 'context' no backend
+                type: type, // O backend espera 'type' e converte para 'context' no banco
                 notes: notes,
-                recordedAt: date.toISOString(), // 5. Envia a data e hora selecionadas
+                recordedAt: date.toISOString(), 
             });
 
             Alert.alert("Sucesso!", "Registro salvo.", [
@@ -59,12 +58,11 @@ export default function RegistroGlicemico({ navigation }) {
             ]);
 
         } catch (error) {
-            Alert.alert("Erro", "Não foi possível salvar o registro.");
             console.error(error);
+            Alert.alert("Erro", "Não foi possível salvar o registro.");
         }
     };
 
-    // 6. Formata a data e hora para mostrar no "botão"
     const formatDate = (date) => {
         return date.toLocaleDateString('pt-BR', {
             day: '2-digit', month: '2-digit', year: 'numeric',
@@ -74,51 +72,52 @@ export default function RegistroGlicemico({ navigation }) {
 
     return (
         <SafeAreaView style={styles.container}>
+            
             {/* Cabeçalho Verde */}
             <View style={styles.header}>
-                <Text style={styles.headerTitle}>Registro glicemia</Text>
+                <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+                    <FontAwesome name="arrow-left" size={24} color="#fff" />
+                </TouchableOpacity>
+                <Text style={styles.headerTitle}>Novo Registro</Text>
             </View>
 
-            {/* 7. O KeyboardAwareScrollView agora engloba SÓ a área branca */}
+            {/* Container Branco (Efeito Folha) */}
             <KeyboardAwareScrollView 
-                style={styles.formArea} // <-- A mágica do card branco
-                contentContainerStyle={{paddingBottom: 40}} // Padding no final
+                style={styles.formArea} 
+                contentContainerStyle={{paddingBottom: 40}} 
             >
-                {/* Campo de Valor */}
+                {/* Campo Valor */}
                 <View style={styles.formGroup}>
-                    <Text style={styles.label}>Valor</Text>
+                    <Text style={styles.label}>Valor (mg/dL)</Text>
                     <TextInput
                         style={styles.input}
                         value={value}
                         onChangeText={setValue}
                         keyboardType="number-pad"
-                        placeholder="110 mg/dl"
-                        placeholderTextColor="#888"
+                        placeholder="Ex: 110"
+                        placeholderTextColor="#ccc"
                     />
                 </View>
 
-                {/* 8. Campo de Data e Hora (Novo) */}
+                {/* Campo Data e Hora */}
                 <View style={styles.formGroup}>
-                    <Text style={styles.label}>Data e hora</Text>
+                    <Text style={styles.label}>Data e Hora</Text>
                     <TouchableOpacity
                         style={styles.inputDate}
                         onPress={() => {
-                            setMode('date'); // Começa pela data
+                            setMode('date');
                             setShowPicker(true);
                         }}
                     >
-                        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-                            <Text style={styles.inputDateText}>{formatDate(date)}</Text>
-                            <FontAwesome name="calendar" size={20} color="#666" />
-                        </View>
+                        <Text style={styles.inputDateText}>{formatDate(date)}</Text>
+                        <FontAwesome name="calendar" size={20} color="#46A376" />
                     </TouchableOpacity>
 
-                    {/* O componente de Picker (invisível até ser ativado) */}
                     {showPicker && (
                         <DateTimePicker
                             testID="dateTimePicker"
                             value={date}
-                            mode={mode} // 'date' ou 'time'
+                            mode={mode}
                             is24Hour={true}
                             display="default"
                             onChange={onDateTimeChange}
@@ -126,9 +125,9 @@ export default function RegistroGlicemico({ navigation }) {
                     )}
                 </View>
 
-                {/* Campo de Contexto */}
+                {/* Campo Contexto */}
                 <View style={styles.formGroup}>
-                    <Text style={styles.label}>Contexto</Text>
+                    <Text style={styles.label}>Momento</Text>
                     <View style={styles.pickerContainer}>
                         <Picker
                             selectedValue={type}
@@ -138,36 +137,38 @@ export default function RegistroGlicemico({ navigation }) {
                             <Picker.Item label="Em Jejum" value="JEJUM" />
                             <Picker.Item label="Pré-Refeição" value="ANTES_REFEICAO" />
                             <Picker.Item label="Pós-Refeição" value="POS_REFEICAO" />
+                            <Picker.Item label="Antes de Dormir" value="ANTES_DORMIR" />
+                            <Picker.Item label="Madrugada" value="MADRUGADA" />
                             <Picker.Item label="Outro" value="OUTRO" />
                         </Picker>
                     </View>
                 </View>
 
-                {/* Campo de Observação */}
+                {/* Campo Observação */}
                 <View style={styles.formGroup}>
-                    <Text style={styles.label}>Observação:</Text>
+                    <Text style={styles.label}>Observação (Opcional)</Text>
                     <TextInput
                         style={styles.inputNotes}
                         value={notes}
                         onChangeText={setNotes}
-                        placeholder="Detalhes ou anotações adicionais..."
-                        placeholderTextColor="#888"
+                        placeholder="O que você comeu? Como se sente?"
+                        placeholderTextColor="#ccc"
                         multiline={true}
-                        numberOfLines={4}
+                        numberOfLines={3}
                     />
                 </View>
 
                 {/* Botão Salvar */}
                 <View style={styles.saveButtonContainer}>
                     <Button
-                        texto="Salvar"
+                        texto="Salvar Registro"
                         onPress={handleSave}
-                        buttonStyle={{ backgroundColor: '#46A376' }} // Botão verde
+                        buttonStyle={{ backgroundColor: '#46A376', width: '100%' }} 
                     />
                 </View>
 
                 {/* Botão Cancelar */}
-                <TouchableOpacity onPress={() => navigation.goBack()}>
+                <TouchableOpacity onPress={() => navigation.goBack()} style={{marginTop: 15}}>
                     <Text style={styles.cancelButtonText}>Cancelar</Text>
                 </TouchableOpacity>
 

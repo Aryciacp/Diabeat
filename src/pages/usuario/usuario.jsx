@@ -11,8 +11,8 @@ import {
     Pressable,
     Image,
     Platform,
-    Linking, 
-    Alert    
+    Linking,
+    Alert
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context"; 
 import { styles } from "./usuario.style.js"; 
@@ -24,11 +24,13 @@ import TextBox from "../../components/textbox/textbox.jsx";
 import Button from "../../components/button/button.jsx"; 
 import * as ImagePicker from 'expo-image-picker'; 
 import AsyncStorage from '@react-native-async-storage/async-storage';
+
+// Import do Alerta Customizado
 import CustomAlert from "../../components/customAlert/CustomAlert.jsx";
 
 const { width } = Dimensions.get("window");
 
-// SUA URL NA RENDER
+// URL DO BACKEND (IMPORTANTE PARA O FETCH)
 const BASE_URL = "https://diabeat-api.onrender.com";
 
 export default function UserProfile({ navigation }) {
@@ -100,7 +102,7 @@ export default function UserProfile({ navigation }) {
         );
     };
 
-    // --- 3. Escolher Foto (Limpo e com Corte Quadrado) ---
+    // --- 3. Escolher Foto (CORRIGIDO) ---
     const handlePickImage = async () => {
         const { status, canAskAgain } = await ImagePicker.requestMediaLibraryPermissionsAsync();
 
@@ -120,29 +122,25 @@ export default function UserProfile({ navigation }) {
             return;
         }
 
-        // Tenta abrir a galeria COM edição ativada
         try {
             const result = await ImagePicker.launchImageLibraryAsync({
-                // Usa a versão compatível com seu projeto
+                // Usa a versão compatível com seu projeto (evita crash)
                 mediaTypes: ImagePicker.MediaTypeOptions.Images,
                 
-                // ATIVAR EDIÇÃO PARA CORTE
+                // Tenta ativar edição com corte quadrado
                 allowsEditing: true, 
-
-                // FORÇAR CORTE QUADRADO [1, 1]
-                // Isso garante que a imagem fique redonda perfeita no layout
                 aspect: [1, 1], 
                 
-                quality: 0.8, // Qualidade um pouco melhor para avatar
+                quality: 0.8,
             });
 
             if (!result.canceled) {
                 setAvatar(result.assets[0].uri);
-                setIsEditing(true);
+                setIsEditing(true); // Já entra em modo de edição
             }
         } catch (error) {
-            // Se o editor nativo falhar, avisa o usuário
-            Alert.alert("Erro na Galeria", "Não foi possível abrir o editor de imagens do seu aparelho.");
+            // Fallback se o editor falhar
+            Alert.alert("Erro na Galeria", "Não foi possível abrir o editor de imagens.");
         }
     };
 
@@ -180,19 +178,50 @@ export default function UserProfile({ navigation }) {
         setIsPasswordModalVisible(true);
     }
 
-    // --- 6. ENVIO (Limpo, sem logs de debug) ---
+    // --- 6. ENVIO (CORRIGIDO COM FETCH) ---
     const handleConfirmModal = async () => {
         if (!currentPasswordInput) {
             showAlert("Erro", "Digite sua senha atual.", "error");
             return;
         }
 
+        // Pega token
+        const token = await AsyncStorage.getItem('@diabeat:token');
+
         try {
             if (isDeleteFlow) {
-                await api.post('/users/delete-account', { password: currentPasswordInput });
+                // Exclusão
+                const response = await fetch(`${BASE_URL}/users/delete-account`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`,
+                    },
+                    body: JSON.stringify({ password: currentPasswordInput })
+                });
+
+                const responseData = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(responseData.error || "Falha ao solicitar exclusão.");
+                }
+
                 setIsPasswordModalVisible(false);
-                showAlert("Conta Excluída", "Verifique seu e-mail.", "success");
+                
+                // MANDA PARA A TELA DE EXCLUSÃO
+                showAlert(
+                    "E-mail Enviado", 
+                    "Verifique seu e-mail para confirmar a exclusão.", 
+                    "success",
+                    false, 
+                    () => navigation.navigate('DeletarConta'), 
+                    "Inserir Código"
+                );
+
             } else {
+                // Atualização (Upload)
+                console.log("--- [DEBUG] Iniciando Upload (Fetch) ---");
+
                 const formData = new FormData();
                 formData.append('currentPassword', currentPasswordInput);
 
@@ -214,13 +243,11 @@ export default function UserProfile({ navigation }) {
                     });
                 }
 
-                const token = await AsyncStorage.getItem('@diabeat:token');
-
-                // Fetch Nativo
                 const response = await fetch(`${BASE_URL}/users/me`, {
                     method: 'PATCH',
                     headers: {
                         'Authorization': `Bearer ${token}`,
+                        // Sem Content-Type (FormData)
                     },
                     body: formData
                 });
@@ -230,7 +257,8 @@ export default function UserProfile({ navigation }) {
                 try {
                     responseData = JSON.parse(responseText);
                 } catch (e) {
-                    throw new Error("Erro no servidor. Tente novamente mais tarde.");
+                    console.log("HTML Error:", responseText);
+                    throw new Error("Erro no servidor. Verifique se as credenciais AWS estão configuradas.");
                 }
 
                 if (!response.ok) {
@@ -244,6 +272,7 @@ export default function UserProfile({ navigation }) {
             }
 
         } catch (error) {
+            console.log("ERRO:", error);
             const msg = error.message || "Erro de conexão.";
             showAlert("Erro", msg, "error");
         }

@@ -1,19 +1,19 @@
-// ARQUIVO: src/pages/MudarSenha/MudarSenha.jsx
+// ARQUIVO: src/pages/MudarSenha/MudarSenha.jsx (FINALIZADO)
 
 import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { styles } from './MudarSenha.style'; 
-import { COLORS } from '../../constants/theme';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import api from '../../services/api';
 import TextBox from '../../components/textbox/textbox.jsx';
 import Button from '../../components/button/button.jsx';
-
-// --- IMPORT DO ALERTA CUSTOMIZADO ---
 import CustomAlert from '../../components/customAlert/CustomAlert.jsx';
+// OBS: Removi o import do COLORS, pois ele não estava sendo usado diretamente aqui.
 
 const LogoImage = require('../../assets/logo.png'); 
+// A cor branca no seu snippet original era um fallback do COLORS.white, 
+// aqui vou manter o estilo no JSX para evitar quebrar o CSS.
 
 function MudarSenha({ navigation }) {
     const [senhaAtual, setSenhaAtual] = useState("");
@@ -32,6 +32,19 @@ function MudarSenha({ navigation }) {
         setAlertVisible(true);
     };
 
+    // --- FUNÇÃO DE NAVEGAÇÃO SEGURA (FIX CORRETO) ---
+    const navigateBackSafely = () => {
+        if (navigation.canGoBack()) {
+            navigation.goBack(); 
+        } else {
+            // FIX: Navega para o Tab Navigator principal e especifica a aba 'Perfil'
+            navigation.navigate('MainApp', {
+                screen: 'Perfil', 
+            }); 
+        }
+    };
+
+
     const handleUpdatePassword = async () => {
         // 1. Validações
         if (!senhaAtual || !novaSenha || !confirmarSenha) {
@@ -43,7 +56,7 @@ function MudarSenha({ navigation }) {
             return;
         }
         
-        // Regra de Senha Forte (Opcional, mas recomendado)
+        // Regra de Senha Forte
         if (novaSenha.length < 6) {
             showAlert("Senha Curta", "A nova senha deve ter pelo menos 6 caracteres.", "error");
             return;
@@ -52,8 +65,6 @@ function MudarSenha({ navigation }) {
         try {
             setLoading(true);
             
-            // 2. Chama o backend (Rota de atualização de perfil)
-            // Enviamos currentPassword para validação e newPassword para troca
             await api.patch('/users/me', {
                 currentPassword: senhaAtual,
                 newPassword: novaSenha
@@ -61,12 +72,12 @@ function MudarSenha({ navigation }) {
 
             setLoading(false);
 
-            // 3. Sucesso
+            // 3. Sucesso (Com Navegação Segura)
             showAlert(
                 "Sucesso!",
                 "Sua senha foi alterada com sucesso.",
                 "success",
-                () => navigation.goBack() // Volta para o perfil ao fechar
+                navigateBackSafely // Chama a função que volta para o Perfil de forma segura
             );
 
         } catch (error) {
@@ -152,7 +163,8 @@ function MudarSenha({ navigation }) {
                         />
                     </View>
 
-                    <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+                    <TouchableOpacity onPress={navigateBackSafely} style={styles.backButton}>
+                        {/* A cor original era COLORS.white. Usando um texto que se destaca no fundo verde */}
                         <Text style={styles.backText}>Cancelar</Text>
                     </TouchableOpacity>
 

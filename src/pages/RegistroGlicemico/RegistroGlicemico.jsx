@@ -1,7 +1,7 @@
 // ARQUIVO: src/pages/RegistroGlicemico/RegistroGlicemico.jsx
 
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, TextInput } from 'react-native';
+import { View, Text, TouchableOpacity, TextInput, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import DateTimePicker from '@react-native-community/datetimepicker'; 
@@ -25,14 +25,26 @@ export default function RegistroGlicemico({ navigation }) {
 
     // --- ESTADOS DO ALERTA ---
     const [alertVisible, setAlertVisible] = useState(false);
-    const [alertConfig, setAlertConfig] = useState({
-        title: "", message: "", type: "info", 
-        onConfirm: null // Para navegar ao fechar o sucesso
+    const [alertConfig, setAlertConfig] = useState({ 
+        title: "", message: "", type: "info", onConfirm: null 
     });
 
+    // Helper para exibir o alerta
     const showAlert = (title, message, type = "info", onConfirm = null) => {
         setAlertConfig({ title, message, type, onConfirm });
         setAlertVisible(true);
+    };
+
+    // Função de navegação segura (FIX para o erro 'NAVIGATE')
+    const navigateBackSafely = () => {
+        if (navigation.canGoBack()) {
+            navigation.goBack();
+        } else {
+            // Navega para a Tab Bar (MainApp) e abre a aba Glicemia
+            navigation.navigate('MainApp', { 
+                screen: 'Glicemia' 
+            }); 
+        }
     };
 
     const onDateTimeChange = (event, selectedDate) => {
@@ -49,27 +61,18 @@ export default function RegistroGlicemico({ navigation }) {
     };
 
     const handleSave = async () => {
-        // 1. Validação de Campo Vazio
+        // --- 1. VALIDAÇÃO DE LIMITE ---
         if (!value) {
             showAlert("Campo Obrigatório", "Por favor, insira o valor da glicemia.", "error");
             return;
         }
-
-        // 2. Validação de Valor Lógico (Impossível)
         const glucoseValue = parseInt(value);
-        
         if (isNaN(glucoseValue)) {
             showAlert("Valor Inválido", "Digite apenas números.", "error");
             return;
         }
-
-        if (glucoseValue < 20) {
-            showAlert("Valor Muito Baixo", "Glicemia abaixo de 20 mg/dL é extremamente perigosa. Verifique se digitou corretamente.", "error");
-            return;
-        }
-
-        if (glucoseValue > 900) {
-            showAlert("Valor Muito Alto", "Glicemia acima de 900 mg/dL é improvável. Verifique se digitou corretamente.", "error");
+        if (glucoseValue < 20 || glucoseValue > 900) {
+            showAlert("Valor Extremo", "O valor inserido é biologicamente improvável ou perigoso. Verifique.", "error");
             return;
         }
 
@@ -81,12 +84,12 @@ export default function RegistroGlicemico({ navigation }) {
                 recordedAt: date.toISOString(), 
             });
 
-            // 3. Sucesso com Navegação
+            // --- 2. SUCESSO (Com CustomAlert e Navegação Segura) ---
             showAlert(
                 "Sucesso!", 
                 "Registro de glicemia salvo.", 
                 "success", 
-                () => navigation.goBack() // Volta para a tela anterior ao clicar OK
+                navigateBackSafely // Volta para a tela anterior ao clicar OK
             );
 
         } catch (error) {
@@ -111,17 +114,17 @@ export default function RegistroGlicemico({ navigation }) {
                 title={alertConfig.title}
                 message={alertConfig.message}
                 type={alertConfig.type}
-                onConfirm={alertConfig.onConfirm} // Passa a função de navegar
+                onConfirm={alertConfig.onConfirm}
                 onClose={() => {
                     setAlertVisible(false);
-                    // Se tiver onConfirm (sucesso), executa ele ao fechar
+                    // Executa a navegação de sucesso ao fechar o modal
                     if (alertConfig.onConfirm) alertConfig.onConfirm();
                 }}
             />
 
             {/* Cabeçalho Verde */}
             <View style={styles.header}>
-                <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+                <TouchableOpacity onPress={navigateBackSafely} style={styles.backButton}>
                     <FontAwesome name="arrow-left" size={24} color="#fff" />
                 </TouchableOpacity>
                 <Text style={styles.headerTitle}>Novo Registro</Text>
@@ -142,11 +145,11 @@ export default function RegistroGlicemico({ navigation }) {
                         keyboardType="number-pad"
                         placeholder="Ex: 110"
                         placeholderTextColor="#ccc"
-                        maxLength={4} // Limita a 4 dígitos (ex: 1999)
+                        maxLength={4} 
                     />
                 </View>
 
-                {/* Campo Data e Hora */}
+                {/* Data e Hora Picker */}
                 <View style={styles.formGroup}>
                     <Text style={styles.label}>Data e Hora</Text>
                     <TouchableOpacity
@@ -215,7 +218,7 @@ export default function RegistroGlicemico({ navigation }) {
                 </View>
 
                 {/* Botão Cancelar */}
-                <TouchableOpacity onPress={() => navigation.goBack()} style={{marginTop: 15}}>
+                <TouchableOpacity onPress={navigateBackSafely} style={{marginTop: 15}}>
                     <Text style={styles.cancelButtonText}>Cancelar</Text>
                 </TouchableOpacity>
 

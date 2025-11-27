@@ -7,8 +7,7 @@ import {
     TouchableOpacity, 
     ScrollView, 
     Dimensions, 
-    ActivityIndicator, 
-    Alert 
+    ActivityIndicator 
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { styles } from './glicemia.style';
@@ -17,70 +16,65 @@ import { FontAwesome } from '@expo/vector-icons';
 import { useIsFocused } from '@react-navigation/native'; 
 import api from '../../services/api'; 
 
+// Import do Alerta Bonito
+import CustomAlert from '../../components/customAlert/CustomAlert';
+
 const { width } = Dimensions.get('window');
 
-// --- MUDANÇA DE COR AQUI ---
-// Antes era #44c486ff (pastel). Agora é #00E676 (Vibrante/Neon)
-// Outras opções vibrantes se quiser testar: 
-// #27bb71ff (Verde Spotify) ou #10E575 (Verde Tech)
-const PRIMARY_COLOR_HEX = '#44c486ff'; 
+const COLOR_DANGER = '#FF5252'; 
+const COLOR_OK = '#00E676';     
 
-// Dados iniciais (placeholder)
 const emptyChartData = {
     labels: ['-'],
-    datasets: [
-        { 
-            data: [0],
-            // Garante cor sólida e vibrante
-            color: (opacity = 1) => PRIMARY_COLOR_HEX,
-            strokeWidth: 3,
-        }
-    ],
+    datasets: [{ 
+        data: [0],
+        color: (opacity = 1) => COLOR_OK,
+        strokeWidth: 3,
+    }],
 };
 
 const chartConfig = {
     backgroundGradientFrom: '#ffffff',
     backgroundGradientTo: '#ffffff',
-    
-    // Cor base usada para os cálculos. 
-    // Usamos o HEX direto para garantir a vibração máxima.
-    color: (opacity = 1) => PRIMARY_COLOR_HEX,
-    
-    // Cor dos textos (labels) - Mantive cinza para não brigar com o verde
+    color: (opacity = 1) => `rgba(0, 150, 100, ${opacity})`, 
     labelColor: (opacity = 1) => `rgba(130, 130, 130, ${opacity})`,
-    
-    strokeWidth: 3, 
-    
-    // Configura o preenchimento abaixo da linha
-    fillShadowGradient: PRIMARY_COLOR_HEX,
-    // Aumentei levemente a opacidade do fundo para 0.4 para acompanhar a vibração da linha
-    fillShadowGradientOpacity: 0.4, 
-    fillShadowGradientFrom: PRIMARY_COLOR_HEX,
-    fillShadowGradientTo: '#ffffff',
+    strokeWidth: 2, 
+    fillShadowGradientFrom: COLOR_DANGER,
+    fillShadowGradientFromOpacity: 0.2,
+    fillShadowGradientTo: COLOR_OK,
+    fillShadowGradientToOpacity: 0.05,
     useShadowColorFromDataset: false,
-
     decimalPlaces: 0,
-    
-    // Linhas de grade
     propsForBackgroundLines: {
         strokeDasharray: "", 
-        stroke: "#f0f0f0", 
+        stroke: "#f5f5f5", 
         strokeWidth: 1,
     },
-    
     propsForDots: {
-        r: "0",
-        strokeWidth: "0",
+        r: "5", 
+        strokeWidth: "2",
+        stroke: "#fff", 
     },
 };
 
 export default function Glicemia({ navigation }) {
-    
     const [isLoading, setIsLoading] = useState(true);
     const [chartData, setChartData] = useState(emptyChartData);
     const [ultimoRegistro, setUltimoRegistro] = useState("Nenhum registro encontrado.");
     const [mediaGeral, setMediaGeral] = useState("N/A"); 
     const [tituloMes, setTituloMes] = useState("Glicemia do Mês");
+    const [mesRecords, setMesRecords] = useState([]); 
+
+    // --- ESTADOS DO ALERTA ---
+    const [alertVisible, setAlertVisible] = useState(false);
+    const [alertConfig, setAlertConfig] = useState({
+        title: "",
+        message: "",
+        type: "info",
+        showCancel: false,
+        onConfirm: null,
+        confirmText: "OK"
+    });
 
     const isFocused = useIsFocused();
 
@@ -91,6 +85,18 @@ export default function Glicemia({ navigation }) {
         const time = date.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
         const day = date.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
         return `${day} às ${time}`;
+    };
+
+    const getGlucoseColor = (value) => {
+        if (value > 180) return COLOR_DANGER; 
+        if (value < 70) return COLOR_DANGER;  
+        return COLOR_OK; 
+    };
+
+    // --- Helper para mostrar alerta ---
+    const showAlert = (title, message, type = "info", showCancel = false, onConfirm = null, confirmText = "OK") => {
+        setAlertConfig({ title, message, type, showCancel, onConfirm, confirmText });
+        setAlertVisible(true);
     };
 
     const fetchData = async () => {
@@ -109,6 +115,7 @@ export default function Glicemia({ navigation }) {
                 setChartData(emptyChartData);
                 setUltimoRegistro("Nenhum registro encontrado.");
                 setMediaGeral("N/A");
+                setMesRecords([]); 
                 return; 
             }
 
@@ -119,8 +126,10 @@ export default function Glicemia({ navigation }) {
 
             if (registrosDoMes.length === 0) {
                 setChartData(emptyChartData);
+                setMesRecords([]);
             } else {
                 registrosDoMes.sort((a, b) => new Date(a.recordedAt) - new Date(b.recordedAt));
+                setMesRecords(registrosDoMes);
 
                 const newChartData = {
                     labels: registrosDoMes.map(r => 
@@ -128,9 +137,7 @@ export default function Glicemia({ navigation }) {
                     ),
                     datasets: [{
                         data: registrosDoMes.map(r => r.value),
-                        // Força a cor vibrante na linha
-                        color: (opacity = 1) => PRIMARY_COLOR_HEX, 
-                        strokeWidth: 3,
+                        color: (opacity = 1) => COLOR_OK, 
                     }]
                 };
                 setChartData(newChartData);
@@ -151,7 +158,8 @@ export default function Glicemia({ navigation }) {
             }
 
         } catch (error) {
-            console.error("Erro ao buscar dados de glicemia:", error);
+            console.error(error);
+            showAlert("Erro", "Não foi possível buscar os dados.", "error");
         } finally {
             setIsLoading(false);
         }
@@ -164,11 +172,33 @@ export default function Glicemia({ navigation }) {
         }
     }, [isFocused]);
 
+    // --- CLIQUE NO GRÁFICO (COM ALERTA BONITO) ---
+    const handlePointClick = (data) => {
+        const clickedIndex = data.index;
+        const registroClicado = mesRecords[clickedIndex];
+
+        if (registroClicado) {
+            // Mostra o alerta Customizado com opção de editar
+            showAlert(
+                "Detalhes do Registro",
+                `Glicemia: ${registroClicado.value} mg/dL\nData: ${formatRecordDate(registroClicado.recordedAt)}\n\nDeseja ver ou editar este registro?`,
+                "info",
+                true, // Mostra botão Cancelar
+                () => {
+                    // Ação ao confirmar
+                    navigation.navigate('HistoricoGlicemia', { 
+                        highlightId: registroClicado.id 
+                    });
+                },
+                "Ver/Editar" // Texto do botão de confirmar
+            );
+        }
+    };
+
     if (isLoading) {
         return (
             <SafeAreaView style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
-                {/* Usei a cor vibrante aqui também no loading */}
-                <ActivityIndicator size="large" color={PRIMARY_COLOR_HEX} />
+                <ActivityIndicator size="large" color={COLOR_OK} />
                 <Text style={{marginTop: 10, color: '#333'}}>Carregando dados...</Text>
             </SafeAreaView>
         );
@@ -176,6 +206,19 @@ export default function Glicemia({ navigation }) {
 
     return (
         <SafeAreaView style={styles.container}>
+            
+            {/* --- COMPONENTE DE ALERTA --- */}
+            <CustomAlert 
+                visible={alertVisible}
+                title={alertConfig.title}
+                message={alertConfig.message}
+                type={alertConfig.type}
+                showCancel={alertConfig.showCancel}
+                onConfirm={alertConfig.onConfirm}
+                confirmText={alertConfig.confirmText}
+                onClose={() => setAlertVisible(false)}
+            />
+
             <ScrollView
                 style={styles.scrollContainer}
                 contentContainerStyle={styles.infoContainer}
@@ -190,7 +233,14 @@ export default function Glicemia({ navigation }) {
                         height={220}
                         chartConfig={chartConfig}
                         bezier
-                        withDots={false}
+                        withDots={true}
+                        
+                        onDataPointClick={handlePointClick}
+
+                        getDotColor={(dataPoint, index) => {
+                            return getGlucoseColor(dataPoint);
+                        }}
+
                         withInnerLines={true}
                         withOuterLines={false}
                         withVerticalLines={false}
@@ -200,6 +250,18 @@ export default function Glicemia({ navigation }) {
                             paddingRight: 20,
                         }}
                     />
+                </View>
+
+                {/* Legenda */}
+                <View style={{flexDirection: 'row', justifyContent: 'center', marginBottom: 20, gap: 15}}>
+                    <View style={{flexDirection: 'row', alignItems: 'center'}}>
+                        <View style={{width: 10, height: 10, borderRadius: 5, backgroundColor: COLOR_OK, marginRight: 5}} />
+                        <Text style={{fontSize: 12, color: '#666'}}>Normal</Text>
+                    </View>
+                    <View style={{flexDirection: 'row', alignItems: 'center'}}>
+                        <View style={{width: 10, height: 10, borderRadius: 5, backgroundColor: COLOR_DANGER, marginRight: 5}} />
+                        <Text style={{fontSize: 12, color: '#666'}}>Perigo</Text>
+                    </View>
                 </View>
 
                 <Text style={styles.infoText}>

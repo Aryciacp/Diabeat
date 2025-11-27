@@ -21,11 +21,12 @@ import HistoricoGlicemia from './src/pages/HistoricoGlicemia/HistoricoGlicemia.j
 
 // --- NOVAS TELAS DE RECEITAS ---
 import ReceitasLista from './src/pages/ReceitasLista/ReceitasLista.jsx';
-import ReceitaDetalhe from './src/pages/ReceitaDetalhe/ReceitaDetalhe.jsx';
+import ReceitaDetalhe from './src/pages/ReceitaDetalhe/ReceitaDetalhe.jsx'; // Importação corrigida da pasta
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
-const ReceitasStack = createNativeStackNavigator(); // <--- Criei um stack só para receitas
+
+// (Removi o ReceitasStack pois não precisamos mais dele aqui)
 
 // --- Configuração de Linking (Deep Link) ---
 const linking = {
@@ -37,16 +38,6 @@ const linking = {
     }
   }
 };
-
-// --- 1. O Stack Navigator das Receitas ---
-function ReceitasStackNavigator() {
-    return (
-        <ReceitasStack.Navigator screenOptions={{ headerShown: false }}>
-            <ReceitasStack.Screen name="ReceitasLista" component={ReceitasLista} />
-            <ReceitasStack.Screen name="ReceitaDetalhe" component={ReceitaDetalhe} />
-        </ReceitasStack.Navigator>
-    );
-}
 
 // --- Função 'MainAppTabs' ---
 function MainAppTabs() {
@@ -116,15 +107,14 @@ function MainAppTabs() {
                 }}
             />
 
-            {/* Aba 3: RECEITAS (Atualizado) */}
+            {/* Aba 3: RECEITAS */}
             <Tab.Screen
-                name="ReceitasTab" // Nome da rota da aba
-                component={ReceitasStackNavigator} // <--- Chama o Stack aqui!
+                name="ReceitasTab" 
+                component={ReceitasLista} // <--- MUDANÇA: Chama a lista direto aqui
                 options={{
                     tabBarIcon: ({ color, focused }) => (
                         focused ? (
                             <View style={styles.focusedIconContainer}>
-                                {/* Troquei o ícone para 'cutlery' (talheres) ou 'book' */}
                                 <FontAwesome name="cutlery" size={20} color="#FFFFFF" />
                             </View>
                         ) : (
@@ -179,6 +169,14 @@ export default function App() {
                 />
                 <Stack.Screen name="HistoricoGlicemia" component={HistoricoGlicemia} />
 
+                {/* --- AQUI ESTÁ A MÁGICA --- */}
+                {/* Colocamos ReceitaDetalhe FORA das abas, na pilha principal */}
+                <Stack.Screen 
+                    name="ReceitaDetalhe" 
+                    component={ReceitaDetalhe} 
+                    options={{ animation: 'slide_from_right' }} // Animação opcional bonita
+                />
+
             </Stack.Navigator>
         </NavigationContainer>
     );
@@ -187,7 +185,7 @@ export default function App() {
 // --- Estilos do Ícone Focado ---
 const styles = StyleSheet.create({
     focusedIconContainer: {
-        backgroundColor: '#46A376', // <--- Atualizei para o verde correto da marca!
+        backgroundColor: '#46A376', 
         width: 40,  
         height: 40, 
         borderRadius: 20, 

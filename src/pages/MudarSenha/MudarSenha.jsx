@@ -1,140 +1,164 @@
-// EM: src/pages/MudarSenha/MudarSenha.jsx
+// ARQUIVO: src/pages/MudarSenha/MudarSenha.jsx
 
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, Alert, Image } from 'react-native';
+import { View, Text, TouchableOpacity, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { styles } from './MudarSenha.style'; // Estilo novo
-import { COLORS, FONT_SIZE } from '../../constants/theme';
+import { styles } from './MudarSenha.style'; 
+import { COLORS } from '../../constants/theme';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import api from '../../services/api';
 import TextBox from '../../components/textbox/textbox.jsx';
 import Button from '../../components/button/button.jsx';
 
-// (Assumindo que a logo está acessível por este caminho)
+// --- IMPORT DO ALERTA CUSTOMIZADO ---
+import CustomAlert from '../../components/customAlert/CustomAlert.jsx';
+
 const LogoImage = require('../../assets/logo.png'); 
 
 function MudarSenha({ navigation }) {
     const [senhaAtual, setSenhaAtual] = useState("");
     const [novaSenha, setNovaSenha] = useState("");
     const [confirmarSenha, setConfirmarSenha] = useState("");
+    const [loading, setLoading] = useState(false);
+
+    // --- ESTADOS DO ALERTA ---
+    const [alertVisible, setAlertVisible] = useState(false);
+    const [alertConfig, setAlertConfig] = useState({ 
+        title: "", message: "", type: "info", onConfirm: null 
+    });
+
+    const showAlert = (title, message, type = "info", onConfirm = null) => {
+        setAlertConfig({ title, message, type, onConfirm });
+        setAlertVisible(true);
+    };
 
     const handleUpdatePassword = async () => {
-        // 1. Validações primeiro
+        // 1. Validações
         if (!senhaAtual || !novaSenha || !confirmarSenha) {
-            Alert.alert("Erro", "Por favor, preencha todos os campos.");
+            showAlert("Campos Vazios", "Por favor, preencha todos os campos.", "error");
             return;
         }
         if (novaSenha !== confirmarSenha) {
-            Alert.alert("Erro", "A nova senha e a confirmação não coincidem.");
+            showAlert("Senhas Diferentes", "A nova senha e a confirmação não coincidem.", "error");
+            return;
+        }
+        
+        // Regra de Senha Forte (Opcional, mas recomendado)
+        if (novaSenha.length < 6) {
+            showAlert("Senha Curta", "A nova senha deve ter pelo menos 6 caracteres.", "error");
             return;
         }
 
         try {
-            // 2. Chama o backend
-            // (O seu 'updateProfile' no backend JÁ está pronto para isso!)
-            const response = await api.patch('/users/me', {
+            setLoading(true);
+            
+            // 2. Chama o backend (Rota de atualização de perfil)
+            // Enviamos currentPassword para validação e newPassword para troca
+            await api.patch('/users/me', {
                 currentPassword: senhaAtual,
                 newPassword: novaSenha
             });
 
+            setLoading(false);
+
             // 3. Sucesso
-            Alert.alert(
+            showAlert(
                 "Sucesso!",
-                "Sua senha foi alterada.",
-                [
-                    { 
-                        text: "OK", 
-                        // Volta para a tela de Perfil
-                        onPress: () => navigation.goBack() 
-                    }
-                ]
+                "Sua senha foi alterada com sucesso.",
+                "success",
+                () => navigation.goBack() // Volta para o perfil ao fechar
             );
 
         } catch (error) {
-            // 4. Erro (ex: senha atual incorreta)
-            const errorMessage = error.response?.data?.error || "Não foi possível alterar a senha.";
-            Alert.alert("Erro ao Alterar Senha", errorMessage);
+            setLoading(false);
+            const errorMessage = error.response?.data?.error || "Não foi possível alterar a senha. Verifique sua senha atual.";
+            showAlert("Erro ao Alterar", errorMessage, "error");
         }
     };
 
     return (
         <SafeAreaView style={styles.container}>
+            
+            <CustomAlert 
+                visible={alertVisible}
+                title={alertConfig.title}
+                message={alertConfig.message}
+                type={alertConfig.type}
+                onConfirm={alertConfig.onConfirm}
+                onClose={() => {
+                    setAlertVisible(false);
+                    if (alertConfig.onConfirm) alertConfig.onConfirm();
+                }}
+            />
+
             <KeyboardAwareScrollView
-                style={{ flex: 1 }}
                 contentContainerStyle={styles.scrollContainer}
                 keyboardShouldPersistTaps="handled"
                 enableOnAndroid={true}
                 extraScrollHeight={75}
                 showsVerticalScrollIndicator={false}
             >
-                <View style={styles.formGroup}>
-                    {/* Logo */}
-                    <View style={{ marginBottom: 30, alignItems: 'center' }}>
-                        <Image 
-                            source={LogoImage} 
-                            style={{ width: 150, height: 150, resizeMode: 'contain' }} 
-                        />
-                    </View>
+                
+                {/* Logo fora do card */}
+                <View style={styles.logoContainer}>
+                    <Image source={LogoImage} style={styles.logo} />
+                </View>
+
+                {/* --- CARD BRANCO FLUTUANTE --- */}
+                <View style={styles.card}>
                     
-                    <Text style={styles.welcomeText}>Alterar Senha</Text> 
+                    <Text style={styles.titleText}>Alterar Senha</Text> 
+                    <Text style={styles.subtitleText}>Atualize suas credenciais de acesso.</Text>
 
                     <View style={styles.form}>
+                        <Text style={styles.label}>Senha Atual</Text>
                         <TextBox 
-                            label="Senha Atual"
                             value={senhaAtual}
                             onChangeText={setSenhaAtual}
                             isPassword={true}
-                            labelStyle={{ color: COLORS.white }}
-                            inputStyle={{ backgroundColor: '#fff', borderColor: 'transparent' }} 
-                            textInputStyle={{ color: '#000' }} 
-                            placeholderColor="#888"
+                            placeholder="Digite sua senha atual"
+                            inputStyle={styles.inputBackground}
                         />
                     </View>
 
                     <View style={styles.form}>
+                        <Text style={styles.label}>Nova Senha</Text>
                         <TextBox 
-                            label="Nova Senha"
                             value={novaSenha}
                             onChangeText={setNovaSenha}
                             isPassword={true}
-                            labelStyle={{ color: COLORS.white }}
-                            inputStyle={{ backgroundColor: '#fff', borderColor: 'transparent' }} 
-                            textInputStyle={{ color: '#000' }} 
-                            placeholderColor="#888"
+                            placeholder="Mín. 6 caracteres"
+                            inputStyle={styles.inputBackground}
                         />
                     </View>
 
                     <View style={styles.form}>
+                        <Text style={styles.label}>Confirmar Nova Senha</Text>
                         <TextBox 
-                            label="Confirmar Nova Senha"
                             value={confirmarSenha}
                             onChangeText={setConfirmarSenha}
                             isPassword={true}
-                            labelStyle={{ color: COLORS.white }}
-                            inputStyle={{ backgroundColor: '#fff', borderColor: 'transparent' }} 
-                            textInputStyle={{ color: '#000' }} 
-                            placeholderColor="#888"
+                            placeholder="Repita a nova senha"
+                            inputStyle={styles.inputBackground}
                         />
                     </View>
 
-                    <View style={styles.form}>
+                    <View style={styles.buttonContainer}>
                         <Button 
-                            texto="Salvar Nova Senha" 
+                            texto={loading ? "Salvando..." : "Salvar Nova Senha"} 
                             onPress={handleUpdatePassword}
-                            buttonStyle={{ width: '100%', backgroundColor: '#008000' }} 
-                            textStyle={{ color: COLORS.white, fontWeight: 'bold' }} 
+                            disabled={loading}
+                            buttonStyle={styles.mainButton} 
                         />
                     </View>
-                </View>
 
-                {/* Rodapé (Botão de Voltar) */}
-                <View style={styles.footer}>
-                    <TouchableOpacity onPress={() => navigation.goBack()}>
-                        <Text style={styles.footerText}>Voltar para o Perfil</Text>
+                    <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+                        <Text style={styles.backText}>Cancelar</Text>
                     </TouchableOpacity>
+
                 </View>
 
-            </KeyboardAwareScrollView> 
+            </KeyboardAwareScrollView>
         </SafeAreaView>
     );
 }

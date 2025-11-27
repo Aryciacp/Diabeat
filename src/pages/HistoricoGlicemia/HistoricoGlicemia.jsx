@@ -3,7 +3,7 @@
 import React, { useState, useCallback } from 'react';
 import { 
     View, Text, TouchableOpacity, ScrollView, Dimensions, 
-    Alert, ActivityIndicator, Modal, TextInput, Pressable 
+    ActivityIndicator, Modal, TextInput, Pressable 
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { styles } from './HistoricoGlicemia.style';
@@ -16,42 +16,59 @@ import { Picker } from '@react-native-picker/picker';
 import { BarChart } from 'react-native-chart-kit';
 import * as Print from 'expo-print';
 import * as Sharing from 'expo-sharing';
+import CustomAlert from '../../components/customAlert/CustomAlert';
 
 const { width } = Dimensions.get('window');
 
-export default function HistoricoGlicemia({ navigation }) {
+export default function HistoricoGlicemia({ navigation, route }) {
     
     const [isLoading, setIsLoading] = useState(true);
-    const [allRecords, setAllRecords] = useState([]); // Todos os dados
-    const [filteredRecords, setFilteredRecords] = useState([]); // Dados filtrados (ex: hoje)
-    
-    // Estados de Filtro
+    const [allRecords, setAllRecords] = useState([]); 
+    const [filteredRecords, setFilteredRecords] = useState([]); 
     const [selectedDate, setSelectedDate] = useState(new Date());
     const [showDatePicker, setShowDatePicker] = useState(false);
-
-    // Estados de Edição
     const [editModalVisible, setEditModalVisible] = useState(false);
     const [editingRecord, setEditingRecord] = useState(null);
     const [editValue, setEditValue] = useState("");
     const [editType, setEditType] = useState("");
+    const [alertVisible, setAlertVisible] = useState(false);
+    const [alertConfig, setAlertConfig] = useState({ title: "", message: "", type: "info" });
 
-    // --- 1. BUSCAR DADOS ---
+    const { highlightId } = route.params || {};
+
+    const showAlert = (title, message, type = "info") => {
+        setAlertConfig({ title, message, type });
+        setAlertVisible(true);
+    };
+
     const fetchRecords = async () => {
         setIsLoading(true);
         try {
             const response = await api.get('/users/glucose');
-            setAllRecords(response.data);
-            filterByDate(response.data, selectedDate); // Já aplica o filtro na data atual
+            const data = response.data;
+            setAllRecords(data);
+
+            if (highlightId) {
+                const targetRecord = data.find(r => r.id === highlightId);
+                if (targetRecord) {
+                    const targetDate = new Date(targetRecord.recordedAt);
+                    setSelectedDate(targetDate);
+                    filterByDate(data, targetDate);
+                } else {
+                    filterByDate(data, selectedDate);
+                }
+            } else {
+                filterByDate(data, selectedDate);
+            }
         } catch (error) {
-            Alert.alert("Erro", "Não foi possível carregar o histórico.");
+            showAlert("Erro", "Não foi possível carregar o histórico.", "error");
         } finally {
             setIsLoading(false);
         }
     };
 
-    useFocusEffect(useCallback(() => { fetchRecords(); }, []));
+    useFocusEffect(useCallback(() => { fetchRecords(); }, [highlightId])); 
 
-    // --- 2. FILTRAR POR DATA ---
     const filterByDate = (records, date) => {
         const filtered = records.filter(item => {
             const itemDate = new Date(item.recordedAt);
@@ -61,7 +78,6 @@ export default function HistoricoGlicemia({ navigation }) {
                 itemDate.getFullYear() === date.getFullYear()
             );
         });
-        // Ordena: mais recente no topo
         setFilteredRecords(filtered.sort((a,b) => new Date(b.recordedAt) - new Date(a.recordedAt)));
     };
 
@@ -69,24 +85,20 @@ export default function HistoricoGlicemia({ navigation }) {
         setShowDatePicker(false);
         if (date) {
             setSelectedDate(date);
+            navigation.setParams({ highlightId: null });
             filterByDate(allRecords, date);
         }
     };
 
-    // --- 3. GERAR DADOS PARA O GRÁFICO (Barras) ---
     const getChartData = () => {
         if (filteredRecords.length === 0) return null;
-
-        // Pega os últimos 6 registros do dia para o gráfico não quebrar
         const dataSlice = filteredRecords.slice(0, 6).reverse();
-        
         return {
             labels: dataSlice.map(r => new Date(r.recordedAt).toLocaleTimeString('pt-BR', {hour: '2-digit', minute: '2-digit'})),
             datasets: [{ data: dataSlice.map(r => r.value) }]
         };
     };
 
-    // --- 4. EDITAR REGISTRO ---
     const handleEditPress = (item) => {
         setEditingRecord(item);
         setEditValue(String(item.value));
@@ -99,60 +111,46 @@ export default function HistoricoGlicemia({ navigation }) {
             await api.put(`/users/glucose/${editingRecord.id}`, {
                 value: editValue,
                 type: editType,
-                recordedAt: editingRecord.recordedAt // Mantém a data original
+                recordedAt: editingRecord.recordedAt 
             });
             setEditModalVisible(false);
-            Alert.alert("Sucesso", "Registro atualizado!");
-            fetchRecords(); // Recarrega tudo
+            showAlert("Sucesso", "Registro atualizado!", "success");
+            fetchRecords(); 
         } catch (error) {
-            Alert.alert("Erro", "Falha ao atualizar.");
+            showAlert("Erro", "Falha ao atualizar o registro.", "error");
         }
     };
 
-    // --- 5. BAIXAR RELATÓRIO (PDF) ---
     const handleDownload = async () => {
         try {
-            // Cria um HTML simples para o PDF
             const htmlContent = `
                 <html>
-                  <head>
-                    <style>
-                      body { font-family: Helvetica; padding: 20px; }
-                      h1 { color: #46A376; text-align: center; }
-                      table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-                      th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
-                      th { background-color: #46A376; color: white; }
-                    </style>
-                  </head>
                   <body>
-                    <h1>Relatório de Glicemia - Diabeat</h1>
-                    <h3>Data: ${selectedDate.toLocaleDateString('pt-BR')}</h3>
-                    <table>
-                      <tr>
-                        <th>Hora</th>
-                        <th>Valor (mg/dL)</th>
-                        <th>Contexto</th>
+                    <h1 style="text-align: center; color: #46A376;">Relatório de Glicemia</h1>
+                    <h3 style="text-align: center;">Data: ${selectedDate.toLocaleDateString('pt-BR')}</h3>
+                    <table style="width: 100%; border-collapse: collapse; border: 1px solid #ddd;">
+                      <tr style="background-color: #46A376; color: white;">
+                        <th style="padding: 8px; border: 1px solid #ddd;">Hora</th>
+                        <th style="padding: 8px; border: 1px solid #ddd;">Valor (mg/dL)</th>
+                        <th style="padding: 8px; border: 1px solid #ddd;">Contexto</th>
                       </tr>
                       ${filteredRecords.map(r => `
                         <tr>
-                          <td>${new Date(r.recordedAt).toLocaleTimeString('pt-BR')}</td>
-                          <td><b>${r.value}</b></td>
-                          <td>${r.context}</td>
+                          <td style="padding: 8px; border: 1px solid #ddd;">${new Date(r.recordedAt).toLocaleTimeString('pt-BR')}</td>
+                          <td style="padding: 8px; border: 1px solid #ddd;"><b>${r.value}</b></td>
+                          <td style="padding: 8px; border: 1px solid #ddd;">${r.context}</td>
                         </tr>
                       `).join('')}
                     </table>
                   </body>
                 </html>
             `;
-
             const { uri } = await Print.printToFileAsync({ html: htmlContent });
             await Sharing.shareAsync(uri, { UTI: '.pdf', mimeType: 'application/pdf' });
-
         } catch (error) {
-            Alert.alert("Erro", "Não foi possível gerar o PDF.");
+            showAlert("Erro", "Não foi possível gerar o PDF.", "error");
         }
     };
-
 
     if (isLoading) {
         return (
@@ -166,9 +164,24 @@ export default function HistoricoGlicemia({ navigation }) {
 
     return (
         <SafeAreaView style={styles.container}>
+            
+            <CustomAlert 
+                visible={alertVisible}
+                title={alertConfig.title}
+                message={alertConfig.message}
+                type={alertConfig.type}
+                onClose={() => setAlertVisible(false)}
+            />
+
             <ScrollView contentContainerStyle={styles.scrollContainer} showsVerticalScrollIndicator={false}>
                 
-                <Text style={styles.headerTitle}>Histórico</Text>
+                {/* --- HEADER COM SETA DE VOLTAR --- */}
+                <View style={styles.headerContainer}>
+                    <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+                        <FontAwesome name="arrow-left" size={24} color="#333" />
+                    </TouchableOpacity>
+                    <Text style={styles.headerTitle}>Histórico</Text>
+                </View>
 
                 {/* --- Filtros --- */}
                 <View style={styles.filterContainer}>
@@ -179,8 +192,7 @@ export default function HistoricoGlicemia({ navigation }) {
                         </Text>
                         <FontAwesome name="chevron-down" size={12} color="#FFF" style={{marginLeft: 5}} />
                     </TouchableOpacity>
-                    {/* Botão auxiliar apenas visual para parecer com a imagem */}
-                    <TouchableOpacity style={styles.filterButton} onPress={() => Alert.alert("Info", "Filtro de hora em breve")}>
+                    <TouchableOpacity style={styles.filterButton} onPress={() => showAlert("Info", "Filtro de hora em breve", "info")}>
                         <FontAwesome name="clock-o" size={16} color="#46A376" />
                         <Text style={styles.filterText}>Hora</Text>
                     </TouchableOpacity>
@@ -195,7 +207,7 @@ export default function HistoricoGlicemia({ navigation }) {
                     />
                 )}
 
-                {/* --- Gráfico de Barras --- */}
+                {/* --- Gráfico --- */}
                 <Text style={styles.chartTitle}>Glicemia do dia</Text>
                 <View style={styles.chartContainer}>
                     {chartData ? (
@@ -210,7 +222,7 @@ export default function HistoricoGlicemia({ navigation }) {
                                 backgroundGradientFrom: "#fff",
                                 backgroundGradientTo: "#fff",
                                 decimalPlaces: 0,
-                                color: (opacity = 1) => `rgba(70, 163, 118, ${opacity})`, // #46A376
+                                color: (opacity = 1) => `rgba(70, 163, 118, ${opacity})`,
                                 labelColor: (opacity = 1) => `rgba(0, 0, 0, ${opacity})`,
                                 barPercentage: 0.6,
                             }}
@@ -230,22 +242,38 @@ export default function HistoricoGlicemia({ navigation }) {
                 {filteredRecords.length === 0 ? (
                     <Text style={{textAlign:'center', color:'#999', marginTop: 20}}>Nenhum registro encontrado.</Text>
                 ) : (
-                    filteredRecords.map((item) => (
-                        <View key={item.id} style={styles.historyItem}>
-                            <View style={styles.timeContainer}>
-                                <Text style={styles.timeText}>
-                                    {new Date(item.recordedAt).toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'})}
-                                </Text>
+                    filteredRecords.map((item) => {
+                        const isHighlighted = item.id === highlightId;
+                        return (
+                            <View 
+                                key={item.id} 
+                                style={[
+                                    styles.historyItem,
+                                    isHighlighted && {
+                                        borderColor: '#00E676',
+                                        borderWidth: 2,
+                                        backgroundColor: '#E8F5E9',
+                                        transform: [{ scale: 1.02 }],
+                                        elevation: 5,
+                                        shadowColor: "#00E676"
+                                    }
+                                ]}
+                            >
+                                <View style={styles.timeContainer}>
+                                    <Text style={[styles.timeText, isHighlighted && {fontWeight:'bold', color: '#2E7D5A'}]}>
+                                        {new Date(item.recordedAt).toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'})}
+                                    </Text>
+                                </View>
+                                <View style={styles.dataContainer}>
+                                    <Text style={styles.valueText}>{item.value} mg/dL</Text>
+                                    <Text style={styles.contextText}>{item.context}</Text>
+                                </View>
+                                <TouchableOpacity style={styles.editButton} onPress={() => handleEditPress(item)}>
+                                    <Text style={styles.editButtonText}>Editar</Text>
+                                </TouchableOpacity>
                             </View>
-                            <View style={styles.dataContainer}>
-                                <Text style={styles.valueText}>{item.value} mg/dL</Text>
-                                <Text style={styles.contextText}>{item.context}</Text>
-                            </View>
-                            <TouchableOpacity style={styles.editButton} onPress={() => handleEditPress(item)}>
-                                <Text style={styles.editButtonText}>Editar</Text>
-                            </TouchableOpacity>
-                        </View>
-                    ))
+                        );
+                    })
                 )}
 
                 <Button 
@@ -256,12 +284,11 @@ export default function HistoricoGlicemia({ navigation }) {
 
             </ScrollView>
 
-            {/* --- Modal de Edição --- */}
+            {/* --- Modal --- */}
             <Modal visible={editModalVisible} transparent={true} animationType="slide" onRequestClose={() => setEditModalVisible(false)}>
                 <Pressable style={styles.modalBackdrop} onPress={() => setEditModalVisible(false)}>
                     <Pressable style={styles.modalContainer} onPress={() => {}}>
                         <Text style={styles.modalTitle}>Editar Registro</Text>
-                        
                         <Text style={styles.label}>Valor (mg/dL)</Text>
                         <TextInput 
                             style={styles.input} 
@@ -269,21 +296,15 @@ export default function HistoricoGlicemia({ navigation }) {
                             value={editValue} 
                             onChangeText={setEditValue} 
                         />
-
                         <Text style={styles.label}>Contexto</Text>
                         <View style={[styles.input, {padding:0, justifyContent:'center'}]}>
-                            <Picker
-                                selectedValue={editType}
-                                onValueChange={setEditType}
-                                style={{width: '100%'}}
-                            >
+                            <Picker selectedValue={editType} onValueChange={setEditType} style={{width: '100%'}}>
                                 <Picker.Item label="Em Jejum" value="JEJUM" />
                                 <Picker.Item label="Pré-Refeição" value="ANTES_REFEICAO" />
                                 <Picker.Item label="Pós-Refeição" value="POS_REFEICAO" />
                                 <Picker.Item label="Outro" value="OUTRO" />
                             </Picker>
                         </View>
-
                         <View style={styles.modalActions}>
                             <Button texto="Cancelar" onPress={() => setEditModalVisible(false)} buttonStyle={{backgroundColor:'#999', width:'48%'}} />
                             <Button texto="Salvar" onPress={saveEdit} buttonStyle={{backgroundColor:'#46A376', width:'48%'}} />
@@ -291,7 +312,6 @@ export default function HistoricoGlicemia({ navigation }) {
                     </Pressable>
                 </Pressable>
             </Modal>
-
         </SafeAreaView>
     );
 }

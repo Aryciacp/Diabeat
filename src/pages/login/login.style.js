@@ -1,84 +1,112 @@
-// login.style.js (AJUSTADO - textos brancos)
+// ARQUIVO: src/pages/Login/login.style.js
+
+import { StyleSheet } from "react-native";
 import { COLORS, FONT_SIZE } from "../../constants/theme";
-import { Dimensions } from "react-native";
 
-const { width, height } = Dimensions.get("window");
-const isSmallScreen = height < 700;
-
-export const styles = {
+export const styles = StyleSheet.create({
     container: {
         flex: 1,
         backgroundColor: "#46A376",
     },
-
-    keyboardView: {
-        flex: 1,
-    },
-
+    
     scrollContainer: {
         flexGrow: 1,
-        justifyContent: "space-between",
-        alignItems: "center",
-        paddingHorizontal: width * 0.05,
-        paddingVertical: isSmallScreen ? 15 : 35,
+        justifyContent: "center",
+        paddingHorizontal: 20,
+        paddingBottom: 50,
     },
 
     formGroup: {
         width: "100%",
         alignItems: "center",
-        marginTop: isSmallScreen ? 40 : height * 0.12,
-        marginBottom: isSmallScreen ? 25 : 45,
+        marginTop: 30,
     },
 
-    // “Bem-vindo”
     welcomeText: {
-        fontSize: isSmallScreen ? FONT_SIZE.md : FONT_SIZE.lg,
-        color: "#FFFFFF", // forçado pra branco
+        fontSize: 28,
         fontWeight: "bold",
-        marginBottom: 25,
-        alignSelf: "flex-start",
+        color: COLORS.white,
+        marginBottom: 30,
+        marginTop: 10,
     },
 
     form: {
         width: "100%",
-        marginBottom: 25,
-        gap: 20,
+        marginBottom: 15,
     },
 
-    input: {
-        height: isSmallScreen ? 50 : 60,
-        borderRadius: 10,
-        backgroundColor: "#FFFFFF",
-        paddingHorizontal: 15,
-        fontSize: FONT_SIZE.lg,
-        elevation: 2,
+    // --- ESTILOS DO BOTÃO GOOGLE ---
+    googleButton: {
+        backgroundColor: "#FFFFFF", // Fundo branco
+        width: "100%",
+        height: 50, // Mesma altura do botão padrão
+        borderRadius: 6,
+        flexDirection: "row", // Ícone lado a lado com texto
+        justifyContent: "center",
+        alignItems: "center",
+        
+        // Sombra suave para dar destaque
+        elevation: 3, // Android
+        shadowColor: "#000", // iOS
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.2,
+        shadowRadius: 2,
+    },
+    
+    googleIcon: {
+        width: 24,
+        height: 24,
+        marginRight: 10, // Espaço entre ícone e texto
+        resizeMode: 'contain'
     },
 
-    // “Esqueceu a senha?”
+    googleText: {
+        color: "#333", // Texto cinza escuro (padrão Google)
+        fontSize: 16,
+        fontWeight: "bold",
+    },
+
+    // --- DIVISÓRIA "OU" ---
+    dividerContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        width: '100%',
+        marginBottom: 15,
+    },
+    dividerLine: {
+        flex: 1,
+        height: 1,
+        backgroundColor: 'rgba(255,255,255, 0.3)', // Linha branca transparente
+    },
+    dividerText: {
+        color: '#FFF',
+        paddingHorizontal: 10,
+        fontSize: 14,
+    },
+
     forgotPasswordContainer: {
         width: "100%",
         alignItems: "flex-end",
-        marginTop: -5,
-        marginBottom: 25,
+        marginTop: 5,
     },
 
     forgotPasswordText: {
-        color: "#FFFFFF", // forçado pra branco
-        fontSize: FONT_SIZE.md,
+        color: COLORS.white,
+        fontSize: 14,
         fontWeight: "500",
     },
 
-    // “Ou se cadastre”
     footer: {
         width: "100%",
         alignItems: "center",
         marginTop: 20,
+        marginBottom: 40,
     },
 
     footerText: {
-        textAlign: "center",
-        color: "#FFFFFF", // forçado pra branco
-        fontSize: FONT_SIZE.md,
-        opacity: 0.9,
-    },
-};
+        color: COLORS.white,
+        fontSize: 16,
+        fontWeight: "bold",
+        textDecorationLine: "underline",
+    }
+});

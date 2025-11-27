@@ -1,7 +1,7 @@
 // ARQUIVO: src/pages/RegistroGlicemico/RegistroGlicemico.jsx
 
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, Alert, TextInput, Platform } from 'react-native';
+import { View, Text, TouchableOpacity, TextInput } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import DateTimePicker from '@react-native-community/datetimepicker'; 
@@ -10,27 +10,37 @@ import { Picker } from '@react-native-picker/picker';
 
 import Button from '../../components/button/button.jsx'; 
 import api from '../../services/api';
-
-// Importando o estilo (certifique-se de criar o arquivo abaixo)
 import { styles } from './RegistroGlicemico.js'; 
+
+// --- IMPORT DO ALERTA CUSTOMIZADO ---
+import CustomAlert from '../../components/customAlert/CustomAlert';
 
 export default function RegistroGlicemico({ navigation }) {
     const [value, setValue] = useState("");
     const [type, setType] = useState("JEJUM");
     const [notes, setNotes] = useState("");
-    
-    // Estados para Data e Hora
     const [date, setDate] = useState(new Date()); 
     const [showPicker, setShowPicker] = useState(false); 
     const [mode, setMode] = useState('date'); 
+
+    // --- ESTADOS DO ALERTA ---
+    const [alertVisible, setAlertVisible] = useState(false);
+    const [alertConfig, setAlertConfig] = useState({
+        title: "", message: "", type: "info", 
+        onConfirm: null // Para navegar ao fechar o sucesso
+    });
+
+    const showAlert = (title, message, type = "info", onConfirm = null) => {
+        setAlertConfig({ title, message, type, onConfirm });
+        setAlertVisible(true);
+    };
 
     const onDateTimeChange = (event, selectedDate) => {
         setShowPicker(false); 
         if (selectedDate) {
             if (mode === 'date') {
                 setDate(selectedDate);
-                setMode('time'); // Depois de escolher a data, pede a hora
-                // Pequeno timeout para garantir que o primeiro picker feche antes de abrir o segundo no Android
+                setMode('time'); 
                 setTimeout(() => setShowPicker(true), 100); 
             } else {
                 setDate(selectedDate);
@@ -39,27 +49,49 @@ export default function RegistroGlicemico({ navigation }) {
     };
 
     const handleSave = async () => {
+        // 1. Validação de Campo Vazio
         if (!value) {
-            Alert.alert("Erro", "Por favor, insira o valor da glicemia.");
+            showAlert("Campo Obrigatório", "Por favor, insira o valor da glicemia.", "error");
+            return;
+        }
+
+        // 2. Validação de Valor Lógico (Impossível)
+        const glucoseValue = parseInt(value);
+        
+        if (isNaN(glucoseValue)) {
+            showAlert("Valor Inválido", "Digite apenas números.", "error");
+            return;
+        }
+
+        if (glucoseValue < 20) {
+            showAlert("Valor Muito Baixo", "Glicemia abaixo de 20 mg/dL é extremamente perigosa. Verifique se digitou corretamente.", "error");
+            return;
+        }
+
+        if (glucoseValue > 900) {
+            showAlert("Valor Muito Alto", "Glicemia acima de 900 mg/dL é improvável. Verifique se digitou corretamente.", "error");
             return;
         }
 
         try {
-            // ⚠️ CORREÇÃO AQUI: A rota no backend é '/users/glucose'
             await api.post('/users/glucose', {
-                value: parseInt(value),
-                type: type, // O backend espera 'type' e converte para 'context' no banco
+                value: glucoseValue,
+                type: type, 
                 notes: notes,
                 recordedAt: date.toISOString(), 
             });
 
-            Alert.alert("Sucesso!", "Registro salvo.", [
-                { text: "OK", onPress: () => navigation.goBack() }
-            ]);
+            // 3. Sucesso com Navegação
+            showAlert(
+                "Sucesso!", 
+                "Registro de glicemia salvo.", 
+                "success", 
+                () => navigation.goBack() // Volta para a tela anterior ao clicar OK
+            );
 
         } catch (error) {
             console.error(error);
-            Alert.alert("Erro", "Não foi possível salvar o registro.");
+            showAlert("Erro", "Não foi possível salvar o registro. Tente novamente.", "error");
         }
     };
 
@@ -73,6 +105,20 @@ export default function RegistroGlicemico({ navigation }) {
     return (
         <SafeAreaView style={styles.container}>
             
+            {/* --- COMPONENTE DE ALERTA --- */}
+            <CustomAlert 
+                visible={alertVisible}
+                title={alertConfig.title}
+                message={alertConfig.message}
+                type={alertConfig.type}
+                onConfirm={alertConfig.onConfirm} // Passa a função de navegar
+                onClose={() => {
+                    setAlertVisible(false);
+                    // Se tiver onConfirm (sucesso), executa ele ao fechar
+                    if (alertConfig.onConfirm) alertConfig.onConfirm();
+                }}
+            />
+
             {/* Cabeçalho Verde */}
             <View style={styles.header}>
                 <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
@@ -81,7 +127,7 @@ export default function RegistroGlicemico({ navigation }) {
                 <Text style={styles.headerTitle}>Novo Registro</Text>
             </View>
 
-            {/* Container Branco (Efeito Folha) */}
+            {/* Container Branco */}
             <KeyboardAwareScrollView 
                 style={styles.formArea} 
                 contentContainerStyle={{paddingBottom: 40}} 
@@ -96,6 +142,7 @@ export default function RegistroGlicemico({ navigation }) {
                         keyboardType="number-pad"
                         placeholder="Ex: 110"
                         placeholderTextColor="#ccc"
+                        maxLength={4} // Limita a 4 dígitos (ex: 1999)
                     />
                 </View>
 

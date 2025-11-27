@@ -1,60 +1,55 @@
-// EM: src/pages/registro/registro.style.js (CORRIGIDO E AJUSTADO)
-import { FONT_SIZE } from "../../constants/theme";
-import { Dimensions } from "react-native";
+// ARQUIVO: src/pages/Registro/registro.style.js
 
-const { height } = Dimensions.get("window");
-const isSmallScreen = height < 700;
+import { StyleSheet, Dimensions } from "react-native";
+import { COLORS, FONT_SIZE } from "../../constants/theme";
 
-export const styles = {
-    // Container principal
+const { width } = Dimensions.get('window');
+
+export const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: "#46A376", // mesmo verde do login e mudar senha
+        backgroundColor: "#46A376", // Verde do App
     },
-
-    // ScrollView — área rolável
+    
     scrollContainer: {
         flexGrow: 1,
-        justifyContent: "space-between",
-        alignItems: "center",
-        paddingHorizontal: 15,
-        paddingVertical: isSmallScreen ? 20 : 35,
+        justifyContent: "center",
+        paddingHorizontal: 20,
+        paddingBottom: 50, // AJUSTE 1: Empurra tudo um pouco pra cima
     },
 
-    // Agrupamento da logo e do formulário
+    // Grupo do formulário (Logo + Inputs)
     formGroup: {
         width: "100%",
         alignItems: "center",
-        marginTop: isSmallScreen ? 20 : height * 0.06, // diminui o espaçamento
-        marginBottom: isSmallScreen ? 25 : 45,
+        // Removemos o flex: 1 daqui para ele não empurrar o footer lá pra baixo sozinho
     },
 
-    // “Cadastro”
     welcomeText: {
-        fontSize: isSmallScreen ? FONT_SIZE.md : FONT_SIZE.lg,
-        color: "#FFFFFF", // branco fixo, independente do tema
+        fontSize: 22,
         fontWeight: "bold",
-        marginBottom: 25,
-        alignSelf: "flex-start",
+        color: COLORS.white,
+        marginBottom: 20,
+        marginTop: 10,
     },
 
-    // Inputs do formulário
     form: {
         width: "100%",
-        marginBottom: 25,
+        marginBottom: 15, // Espaço entre os inputs
     },
 
-    // Rodapé (“Já tenho uma conta”)
+    // RODAPÉ (AJUSTADO PARA SUBIR)
     footer: {
         width: "100%",
         alignItems: "center",
-        marginTop: 20,
+        marginTop: 10,    // AJUSTE 2: Diminui distância do botão "Cadastrar"
+        marginBottom: 40, // AJUSTE 3: Levanta o footer do fundo da tela
     },
 
     footerText: {
-        textAlign: "center",
-        color: "#FFFFFF", // branco fixo
-        fontSize: FONT_SIZE.md,
-        opacity: 1,
-    },
-};
+        color: COLORS.white,
+        fontSize: 16,
+        fontWeight: "bold",
+        textDecorationLine: "underline", // Adicionei sublinhado para parecer link
+    }
+});

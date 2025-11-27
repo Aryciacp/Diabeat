@@ -1,19 +1,22 @@
 // EM: src/pages/ResetPassword/ResetPassword.jsx
+
 import React, { useState, useEffect } from 'react';
-import { View, Text, Alert, Image } from 'react-native';
+import { View, Text, Image, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { styles } from '../ResetPassword/resetPassword.style.js'; 
-import { COLORS } from '../../constants/theme';
+import { styles } from './resetPassword.style.js'; 
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import api from '../../services/api';
 import TextBox from '../../components/textbox/textbox.jsx';
 import Button from '../../components/button/button.jsx';
 
+// --- IMPORT DO ALERTA ---
+import CustomAlert from '../../components/customAlert/CustomAlert.jsx';
+
 const LogoImage = require('../../assets/logo.png'); 
 
 export default function ResetPassword({ navigation, route }) {
     
-    // Pega dados vindos da navegação ou link
+    // Parâmetros vindos do Deep Link (email e token)
     const paramsToken = route.params?.token;
     const paramsEmail = route.params?.email;
 
@@ -23,98 +26,164 @@ export default function ResetPassword({ navigation, route }) {
     const [confirmarSenha, setConfirmarSenha] = useState("");
     const [loading, setLoading] = useState(false);
 
+    // --- ESTADOS DO ALERTA ---
+    const [alertVisible, setAlertVisible] = useState(false);
+    const [alertData, setAlertData] = useState({ title: "", message: "", type: "error" });
+
     useEffect(() => {
         if (paramsToken) setToken(paramsToken);
         if (paramsEmail) setEmail(paramsEmail);
     }, [paramsToken, paramsEmail]);
 
+    // Helper para mostrar alerta
+    const mostrarAlerta = (title, message, type = "error") => {
+        setAlertData({ title, message, type });
+        setAlertVisible(true);
+    };
+
+    const fecharAlerta = () => {
+        setAlertVisible(false);
+        // Se for sucesso, manda pro login ao fechar
+        if (alertData.type === 'success') {
+            navigation.navigate('Login');
+        }
+    };
+
+    // --- VALIDAÇÃO ---
+    const validarFormulario = () => {
+        const emailLimpo = email.trim();
+        const tokenLimpo = token.trim();
+        const senhaLimpa = novaSenha.trim();
+        const confSenhaLimpa = confirmarSenha.trim();
+
+        if (!emailLimpo || !tokenLimpo || !senhaLimpa || !confSenhaLimpa) {
+            mostrarAlerta("Campos Vazios", "Por favor, preencha todos os campos.");
+            return null;
+        }
+
+        if (tokenLimpo.length < 6) {
+            mostrarAlerta("Código Inválido", "O código deve ter 6 dígitos.");
+            return null;
+        }
+
+        // Regra de Senha Forte
+        const senhaForteRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&]).{8,}$/;
+        if (!senhaForteRegex.test(senhaLimpa)) {
+            mostrarAlerta("Senha Fraca", "A nova senha deve ter 8 caracteres, maiúscula, minúscula, número e símbolo.");
+            return null;
+        }
+
+        if (senhaLimpa !== confSenhaLimpa) {
+            mostrarAlerta("Senhas Diferentes", "As senhas não conferem.");
+            return null;
+        }
+
+        return { email: emailLimpo, token: tokenLimpo, newPassword: senhaLimpa };
+    };
+
     const handleReset = async () => {
-        if (!email) return Alert.alert("Erro", "E-mail obrigatório.");
-        if (!token) return Alert.alert("Erro", "Código obrigatório.");
-        if (!novaSenha || !confirmarSenha) return Alert.alert("Erro", "Preencha as senhas.");
-        if (novaSenha !== confirmarSenha) return Alert.alert("Erro", "Senhas não coincidem.");
+        const dadosValidos = validarFormulario();
+        if (!dadosValidos) return;
 
         try {
             setLoading(true);
             
-            // Envia tudo para o backend validar
-            await api.post('/users/reset-password', {
-                email: email, 
-                token: token,
-                newPassword: novaSenha
-            });
+            await api.post('/users/reset-password', dadosValidos);
 
             setLoading(false);
-            Alert.alert("Sucesso!", "Senha alterada.", [{ text: "Login", onPress: () => navigation.navigate('Login') }]);
+            mostrarAlerta("Sucesso!", "Sua senha foi redefinida com sucesso.", "success");
 
         } catch (error) {
             setLoading(false);
-            const msg = error.response?.data?.error || "Erro ao resetar.";
-            Alert.alert("Erro", msg);
+            const msg = error.response?.data?.error || "Não foi possível alterar a senha.";
+            mostrarAlerta("Erro", msg, "error");
         }
     };
 
     return (
         <SafeAreaView style={styles.container}>
+            
+            <CustomAlert 
+                visible={alertVisible}
+                title={alertData.title}
+                message={alertData.message}
+                type={alertData.type}
+                onClose={fecharAlerta}
+            />
+
             <KeyboardAwareScrollView contentContainerStyle={styles.scrollContainer}>
-                <View style={styles.formGroup}>
-                    <View style={{ marginBottom: 20, alignItems: 'center' }}>
-                        <Image source={LogoImage} style={{ width: 120, height: 120, resizeMode: 'contain' }} />
-                    </View>
+                
+                {/* Logo fora do card para destaque */}
+                <View style={styles.logoContainer}>
+                    <Image source={LogoImage} style={styles.logo} />
+                </View>
+
+                {/* --- CARD BRANCO --- */}
+                <View style={styles.card}>
                     
                     <Text style={styles.titleText}>Nova Senha</Text> 
+                    <Text style={styles.subtitleText}>Preencha os dados abaixo</Text>
 
                     <View style={styles.form}>
-                        <Text style={{color: COLORS.white, marginBottom: 5}}>E-mail</Text>
+                        <Text style={styles.label}>E-mail</Text>
                         <TextBox 
                             value={email}
                             onChangeText={setEmail}
-                            placeholder="Confirme seu e-mail"
-                            editable={!paramsEmail} // Trava se já veio preenchido
-                            inputStyle={{ backgroundColor: paramsEmail ? '#e0e0e0' : '#fff' }}
+                            placeholder="Seu e-mail"
+                            editable={!paramsEmail} 
+                            keyboardType="email-address"
+                            autoCapitalize="none"
+                            inputStyle={styles.inputBackground}
                         />
                     </View>
 
                     <View style={styles.form}>
-                        <Text style={{color: COLORS.white, marginBottom: 5}}>Código (6 números)</Text>
+                        <Text style={styles.label}>Código de Verificação</Text>
                         <TextBox 
                             value={token}
                             onChangeText={setToken}
                             placeholder="Ex: 123456"
                             keyboardType="numeric"
                             maxLength={6}
-                            inputStyle={{ backgroundColor: '#fff' }}
+                            inputStyle={styles.inputBackground}
                         />
                     </View>
 
                     <View style={styles.form}>
-                        <Text style={{color: COLORS.white, marginBottom: 5}}>Nova Senha</Text>
+                        <Text style={styles.label}>Nova Senha</Text>
                         <TextBox 
                             value={novaSenha}
                             onChangeText={setNovaSenha}
                             isPassword={true}
-                            inputStyle={{ backgroundColor: '#fff' }}
+                            placeholder="Mín. 8 caracteres"
+                            inputStyle={styles.inputBackground}
                         />
                     </View>
 
                     <View style={styles.form}>
-                         <Text style={{color: COLORS.white, marginBottom: 5}}>Confirmar Senha</Text>
+                         <Text style={styles.label}>Confirmar Senha</Text>
                         <TextBox 
                             value={confirmarSenha}
                             onChangeText={setConfirmarSenha}
                             isPassword={true}
-                            inputStyle={{ backgroundColor: '#fff' }}
+                            placeholder="Repita a senha"
+                            inputStyle={styles.inputBackground}
                         />
                     </View>
 
-                    <View style={styles.form}>
+                    <View style={styles.buttonContainer}>
                         <Button 
-                            texto={loading ? "Salvando..." : "Alterar Senha"} 
+                            texto={loading ? "Salvando..." : "Definir Nova Senha"} 
                             onPress={handleReset}
                             disabled={loading}
-                            buttonStyle={{ backgroundColor: '#008000' }} 
+                            buttonStyle={styles.mainButton} 
                         />
                     </View>
+
+                    <TouchableOpacity onPress={() => navigation.navigate('Login')} style={styles.backButton}>
+                        <Text style={styles.backText}>Cancelar</Text>
+                    </TouchableOpacity>
+
                 </View>
             </KeyboardAwareScrollView>
         </SafeAreaView>

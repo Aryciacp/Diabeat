@@ -1,16 +1,13 @@
-// ARQUIVO: src/pages/Receitas/ReceitaDetalhe.jsx
+// ARQUIVO: src/pages/ReceitaDetalhe/ReceitaDetalhe.jsx
 
 import React, { useEffect, useState } from 'react';
 import { 
     View, Text, Image, ScrollView, 
-    TouchableOpacity, ActivityIndicator, Alert 
+    TouchableOpacity, ActivityIndicator, Alert, StatusBar 
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { FontAwesome } from '@expo/vector-icons';
-
-// Importa os estilos
+import { FontAwesome, MaterialIcons } from '@expo/vector-icons'; // Adicionei MaterialIcons para ícones mais bonitos
+import { LinearGradient } from 'expo-linear-gradient'; // <--- IMPORTANTE
 import { styles } from './ReceitaDetalhe.style.js';
-
 import api from '../../services/api'; 
 
 export default function ReceitaDetalhe({ route, navigation }) {
@@ -22,11 +19,10 @@ export default function ReceitaDetalhe({ route, navigation }) {
     useEffect(() => {
         async function loadDetails() {
             try {
-                // Chama seu backend que traduz tudo
                 const response = await api.get(`/recipes/${recipeId}`);
                 setDetails(response.data);
             } catch (error) {
-                console.error("Erro ao carregar detalhes:", error);
+                console.error("Erro ao carregar:", error);
                 Alert.alert("Erro", "Não foi possível carregar a receita.");
                 navigation.goBack();
             } finally {
@@ -39,7 +35,7 @@ export default function ReceitaDetalhe({ route, navigation }) {
     if (loading) {
         return (
             <View style={styles.loadingContainer}>
-                <ActivityIndicator size="large" color="#fff" />
+                <ActivityIndicator size="large" color="#46A376" />
             </View>
         );
     }
@@ -47,75 +43,134 @@ export default function ReceitaDetalhe({ route, navigation }) {
     if (!details) return null;
 
     return (
-        <SafeAreaView style={styles.container}>
-            <View style={styles.header}>
-                <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-                    <FontAwesome name="arrow-left" size={24} color="#fff" />
-                </TouchableOpacity>
+        <View style={styles.container}>
+            <StatusBar barStyle="light-content" backgroundColor="transparent" translucent />
+
+            {/* 1. CAMADA DE FUNDO (IMAGEM + DEGRADÊ) */}
+            <View style={styles.imageContainer}>
+                <Image 
+                    source={{ uri: details.image }} 
+                    style={styles.recipeImage} 
+                    resizeMode="cover"
+                />
+                {/* Degradê suave para escurecer o topo (onde fica o botão voltar) */}
+                <LinearGradient
+                    colors={['rgba(0,0,0,0.6)', 'transparent']}
+                    style={styles.topGradient}
+                />
             </View>
 
-            <View style={styles.contentContainer}>
-                <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{paddingBottom: 40}}>
-                    
-                    <View style={styles.imageWrapper}>
-                        <Image 
-                            source={{ uri: details.image }} 
-                            style={styles.bigImage} 
-                            resizeMode="cover"
-                        />
+            {/* 2. CAMADA DE MEIO (CONTEÚDO) */}
+            <ScrollView 
+                showsVerticalScrollIndicator={false} 
+                contentContainerStyle={styles.scrollContent}
+                style={styles.scrollView}
+            >
+                {/* Espaço transparente para ver a imagem */}
+                <View style={{ height: 300 }} /> 
+
+                <View style={styles.contentBody}>
+                    {/* "Puxador" visual */}
+                    <View style={styles.handleBarContainer}>
+                        <View style={styles.handleBar} />
                     </View>
-                    
+
                     <Text style={styles.title}>{details.title}</Text>
 
                     {/* Badges Informativos */}
                     <View style={styles.badgesContainer}>
-                        <View style={styles.badge}>
-                            <FontAwesome name="check" size={14} color="#46A376" />
-                            <Text style={styles.badgeText}>Zero Açúcar</Text>
-                        </View>
+                        {/* Exemplo de badge fixo se quiser */}
+                        {/* <View style={styles.badge}>
+                            <MaterialIcons name="verified" size={16} color="#46A376" />
+                            <Text style={styles.badgeText}>Verificada</Text>
+                        </View> */}
+                        
                         {details.readyInMinutes && (
                             <View style={styles.badge}>
-                                <FontAwesome name="clock-o" size={14} color="#46A376" />
+                                <MaterialIcons name="timer" size={16} color="#46A376" />
                                 <Text style={styles.badgeText}>{details.readyInMinutes} min</Text>
                             </View>
                         )}
+                        
                         {details.servings && (
                             <View style={styles.badge}>
-                                <FontAwesome name="users" size={14} color="#46A376" />
+                                <MaterialIcons name="restaurant-menu" size={16} color="#46A376" />
                                 <Text style={styles.badgeText}>{details.servings} porções</Text>
                             </View>
                         )}
+                        
+                        {details.healthScore > 70 && (
+                             <View style={styles.badge}>
+                             <MaterialIcons name="favorite" size={16} color="#46A376" />
+                             <Text style={styles.badgeText}>Saudável</Text>
+                         </View>
+                        )}
                     </View>
-
-                    {/* Ingredientes */}
-                    <Text style={styles.sectionTitle}>Ingredientes:</Text>
-                    
-                    {/* CORREÇÃO DE CHAVE: Usando index */}
-                    {details.extendedIngredients?.map((ing, index) => (
-                        <Text key={index} style={styles.textItem}>• {ing.original}</Text>
-                    ))}
 
                     <View style={styles.divider} />
 
-                    {/* Modo de Preparo */}
-                    <Text style={styles.sectionTitle}>Modo de preparo:</Text>
+                    {/* Seção de Ingredientes */}
+                    <View style={styles.sectionHeader}>
+                        <MaterialIcons name="shopping-cart" size={22} color="#46A376" />
+                        <Text style={styles.sectionTitle}>Ingredientes</Text>
+                    </View>
+                    <Text style={styles.sectionSubtitle}>O que você vai precisar:</Text>
                     
-                    {details.analyzedInstructions?.length > 0 ? (
-                        // CORREÇÃO DE CHAVE: Usando index no map
-                        details.analyzedInstructions[0].steps.map((step, index) => (
-                            <View key={index} style={styles.instructionRow}>
-                                <Text style={styles.stepNumber}>{step.number}.</Text>
-                                <Text style={[styles.textItem, {flex: 1}]}>{step.step}</Text>
+                    <View style={styles.ingredientsList}>
+                        {details.extendedIngredients?.map((ing, index) => (
+                            <View key={index} style={styles.ingredientItem}>
+                                {/* Ícone de check em vez de bolinha */}
+                                <View style={styles.checkIconContainer}>
+                                     <FontAwesome name="check" size={12} color="#fff" />
+                                </View>
+                                <Text style={styles.textItem}>{ing.original}</Text>
                             </View>
-                        ))
-                    ) : (
-                        <Text style={styles.textItem}>
-                            {details.instructions || "Instruções detalhadas indisponíveis."}
-                        </Text>
-                    )}
+                        ))}
+                    </View>
 
-                </ScrollView>
-            </View>
-        </SafeAreaView>
+                    <View style={styles.divider} />
+
+                    {/* Seção de Modo de Preparo */}
+                    <View style={styles.sectionHeader}>
+                        <MaterialIcons name="menu-book" size={22} color="#46A376" />
+                        <Text style={styles.sectionTitle}>Modo de Preparo</Text>
+                    </View>
+                    <Text style={styles.sectionSubtitle}>Passo a passo detalhado:</Text>
+                    
+                    <View style={styles.instructionsList}>
+                        {details.analyzedInstructions?.length > 0 ? (
+                            details.analyzedInstructions[0].steps.map((step, index) => (
+                                <View key={index} style={styles.instructionRow}>
+                                    <View style={styles.stepNumberContainer}>
+                                        <Text style={styles.stepNumber}>{step.number}</Text>
+                                    </View>
+                                    <View style={styles.stepTextContainer}>
+                                        <Text style={styles.stepText}>{step.step}</Text>
+                                    </View>
+                                </View>
+                            ))
+                        ) : (
+                            <Text style={styles.textItem}>
+                                {details.instructions || "Siga as instruções padrão da receita."}
+                            </Text>
+                        )}
+                    </View>
+
+                    {/* Espaço extra no final para não cortar o último item */}
+                    <View style={{height: 60}} />
+                </View>
+            </ScrollView>
+
+            {/* 3. CAMADA DE TOPO (BOTÃO VOLTAR) */}
+            <TouchableOpacity 
+                onPress={() => navigation.goBack()} 
+                style={styles.backButton}
+                activeOpacity={0.7}
+            >
+                {/* Usei um ícone ligeiramente mais grosso */}
+                <FontAwesome name="chevron-left" size={18} color="#fff" />
+            </TouchableOpacity>
+
+        </View>
     );
 }
